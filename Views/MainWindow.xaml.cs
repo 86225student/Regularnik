@@ -13,16 +13,15 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
+
 namespace Regularnik
 {
-    /// <summary>
-    /// Logika interakcji dla klasy MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow : Window
-    {
-        public MainWindow()
+        public partial class MainWindow : Window
         {
-            InitializeComponent();
+            public MainWindow()
+            {
+                InitializeComponent();
+            }
         }
-    }
 }
+
