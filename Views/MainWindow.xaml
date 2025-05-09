@@ -7,7 +7,11 @@
         <vm:MainViewModel/>
     </Window.DataContext>
     <Grid>
-        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="39*"/>
+            <ColumnDefinition Width="361*"/>
+        </Grid.ColumnDefinitions>
+        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Grid.Column="1" Margin="222,0,0,0">
             <Button Content="Start"
                     Command="{Binding LoadCoursesCommand}"
                     Width="120" Margin="0,0,0,20"/>
