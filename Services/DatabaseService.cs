@@ -19,7 +19,8 @@ namespace Regularnik.Services
 
         public DatabaseService()
         {
-            _connection = new SQLiteConnection("Data Source=app.db;Version=3;");
+            
+            _connection = new SQLiteConnection("Data Source=Data/app.db;Version=3;");
             _connection.Open();
         }
 
