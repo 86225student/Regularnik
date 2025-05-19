@@ -1,5 +1,5 @@
 ﻿using System.Collections.ObjectModel;
-using System.Collections.Generic;          //  ←  stos
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -7,13 +7,12 @@ using System.Windows.Input;
 using Regularnik.Models;
 using Regularnik.Services;
 using Regularnik.Views;
-using System.Diagnostics;
 
 namespace Regularnik.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
-        private readonly DatabaseService _dbService;
+        private readonly DatabaseService _dbService = new DatabaseService();
         private readonly Stack<object> _viewStack = new Stack<object>();
 
         /* ---------- START / MENU ---------- */
@@ -38,7 +37,7 @@ namespace Regularnik.ViewModels
             }
         }
 
-        /* ---------- Właściwości-widoczki ---------- */
+        /* ---------- Widoczki ---------- */
         public bool IsBackVisible => CurrentView != null;
         public bool IsStartVisible => !IsMenuVisible && CurrentView == null;
 
@@ -48,42 +47,24 @@ namespace Regularnik.ViewModels
         public ICommand BackCommand { get; }
         public ICommand LoadCoursesCommand { get; }
 
-        /* ---------- Data ---------- */
-        public ObservableCollection<Course> Courses { get; }
+        /* ---------- Dane ---------- */
+        public ObservableCollection<Course> Courses { get; } = new ObservableCollection<Course>();
 
         public MainViewModel()
         {
-            _dbService = new DatabaseService();
-            Courses = new ObservableCollection<Course>();
-
             ShowMenuCommand = new RelayCommand(_ => IsMenuVisible = true);
-
             NavigateCommand = new RelayCommand(p => Navigate(p?.ToString()));
-
-            BackCommand = new RelayCommand(_ =>
-            {
-                if (_viewStack.Count > 0)
-                {
-                    CurrentView = _viewStack.Pop(); // cofamy o jeden poziom
-                    IsMenuVisible = false;          // zostajemy poza menu
-                }
-                else
-                {
-                    CurrentView = null;             // wróć do menu Start
-                    IsMenuVisible = true;
-                }
-            });
-
+            BackCommand = new RelayCommand(_ => GoBack());
             LoadCoursesCommand = new RelayCommand(_ => LoadCourses());
         }
 
-        /* ---------- logika ---------- */
-        private void Navigate(string destination)
+        /* ---------- nawigacja ---------- */
+        private void Navigate(string dest)
         {
             if (CurrentView != null)
-                _viewStack.Push(CurrentView);       // zapamiętaj bieżący widok
+                _viewStack.Push(CurrentView);
 
-            switch (destination)
+            switch (dest)
             {
                 case "Catalog":
                     CurrentView = new CatalogView
@@ -93,7 +74,10 @@ namespace Regularnik.ViewModels
                     break;
 
                 case "Courses":
-                    CurrentView = new CoursesView();
+                    CurrentView = new CoursesView
+                    {
+                        DataContext = new CoursesViewModel(_dbService, OnCourseChosen)
+                    };
                     break;
 
                 case "Statistics":
@@ -105,20 +89,45 @@ namespace Regularnik.ViewModels
                     return;
             }
 
-            IsMenuVisible = false; // chowamy główne menu
+            IsMenuVisible = false;
         }
 
-        /* —— kliknięto kurs —— */
+        /* —— klik w katalogu —— */
         private void OnCourseSelected(Course course)
         {
-            _viewStack.Push(CurrentView);           // zapamiętaj katalog
+            _viewStack.Push(CurrentView);
             CurrentView = new CourseWordsView
             {
                 DataContext = new CourseWordsViewModel(_dbService, course)
             };
         }
 
-        /* ---------- pobranie kursów ---------- */
+        /* —— klik w „Kursy” —— */
+        private void OnCourseChosen(Course c)
+        {
+            _viewStack.Push(CurrentView);
+            CurrentView = new CourseSessionView
+            {
+                DataContext = new CourseSessionViewModel(_dbService, c)
+            };
+        }
+
+        /* ---------- cofanie ---------- */
+        private void GoBack()
+        {
+            if (_viewStack.Count > 0)
+            {
+                CurrentView = _viewStack.Pop();
+                IsMenuVisible = false;
+            }
+            else
+            {
+                CurrentView = null;
+                IsMenuVisible = true;
+            }
+        }
+
+        /* ---------- kursy ---------- */
         private void LoadCourses()
         {
             Courses.Clear();
