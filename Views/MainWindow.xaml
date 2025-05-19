@@ -135,9 +135,9 @@
         </StackPanel>
 
         <!-- OBSZAR ROBOCZY -->
-        <Border Grid.Column="2"
+        <Border Grid.Column="1"
                 Background="Transparent"
-                IsHitTestVisible="False">
+                IsHitTestVisible="{Binding IsBackVisible}">
             <ContentControl Content="{Binding CurrentView}"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Stretch"/>

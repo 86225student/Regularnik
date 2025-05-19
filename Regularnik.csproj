@@ -72,6 +72,8 @@
     <Compile Include="Models\Course.cs" />
     <Compile Include="Models\Word.cs" />
     <Compile Include="Services\DatabaseService.cs" />
+    <Compile Include="ViewModels\CatalogViewModel.cs" />
+    <Compile Include="ViewModels\CourseWordsViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\RelayCommand.cs" />
     <Compile Include="Views\CatalogView.xaml.cs">
@@ -79,6 +81,9 @@
     </Compile>
     <Compile Include="Views\CoursesView.xaml.cs">
       <DependentUpon>CoursesView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\CourseWordsView.xaml.cs">
+      <DependentUpon>CourseWordsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
@@ -95,6 +100,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\CoursesView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\CourseWordsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

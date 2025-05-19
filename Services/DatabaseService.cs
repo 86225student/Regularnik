@@ -1,32 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Data.SQLite;
+using Regularnik.Models;
 
 namespace Regularnik.Services
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Data.SQLite;
-    using Regularnik.Models;
-    using System.Data;
-    using System.Data.SQLite;
-
     public class DatabaseService
     {
         private readonly SQLiteConnection _connection;
 
         public DatabaseService()
         {
-            
             _connection = new SQLiteConnection("Data Source=Data/app.db;Version=3;");
             _connection.Open();
         }
 
+        /* ---------- kursy ---------- */
         public IEnumerable<Course> GetCourses()
         {
             var cmd = new SQLiteCommand("SELECT id, name FROM courses", _connection);
+
             using (var reader = cmd.ExecuteReader())
             {
                 while (reader.Read())
@@ -35,6 +28,29 @@ namespace Regularnik.Services
                     {
                         Id = Convert.ToInt32(reader["id"]),
                         Name = reader["name"].ToString()
+                    };
+                }
+            }
+        }
+
+        /* ---------- słówka ---------- */
+        public IEnumerable<Word> GetWords(int courseId)
+        {
+            var cmd = new SQLiteCommand(
+                "SELECT id, word_pl, word_en FROM words WHERE course_id = @cid",
+                _connection);
+
+            cmd.Parameters.AddWithValue("@cid", courseId);
+
+            using (var reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    yield return new Word
+                    {
+                        Id = Convert.ToInt32(reader["id"]),
+                        WordPl = reader["word_pl"].ToString(),
+                        WordEn = reader["word_en"].ToString()
                     };
                 }
             }

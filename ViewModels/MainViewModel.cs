@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Collections.Generic;          //  ←  stos
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -13,9 +14,10 @@ namespace Regularnik.ViewModels
     public class MainViewModel : INotifyPropertyChanged
     {
         private readonly DatabaseService _dbService;
+        private readonly Stack<object> _viewStack = new Stack<object>();
 
         /* ---------- START / MENU ---------- */
-        private bool _isMenuVisible;                   // tylko kafelki
+        private bool _isMenuVisible;
         public bool IsMenuVisible
         {
             get => _isMenuVisible;
@@ -37,8 +39,8 @@ namespace Regularnik.ViewModels
         }
 
         /* ---------- Właściwości-widoczki ---------- */
-        public bool IsBackVisible => CurrentView != null;                     // Wróć
-        public bool IsStartVisible => !IsMenuVisible && CurrentView == null;   // Start
+        public bool IsBackVisible => CurrentView != null;
+        public bool IsStartVisible => !IsMenuVisible && CurrentView == null;
 
         /* ---------- Komendy ---------- */
         public ICommand ShowMenuCommand { get; }
@@ -54,18 +56,22 @@ namespace Regularnik.ViewModels
             _dbService = new DatabaseService();
             Courses = new ObservableCollection<Course>();
 
-            ShowMenuCommand = new RelayCommand(_ =>
-            {
-                Debug.WriteLine("CLICK-START");
-                IsMenuVisible = true;
-            });
+            ShowMenuCommand = new RelayCommand(_ => IsMenuVisible = true);
 
             NavigateCommand = new RelayCommand(p => Navigate(p?.ToString()));
 
             BackCommand = new RelayCommand(_ =>
             {
-                CurrentView = null;      // zeruje widok
-                IsMenuVisible = true;     // pokazuje kafelki
+                if (_viewStack.Count > 0)
+                {
+                    CurrentView = _viewStack.Pop(); // cofamy o jeden poziom
+                    IsMenuVisible = false;          // zostajemy poza menu
+                }
+                else
+                {
+                    CurrentView = null;             // wróć do menu Start
+                    IsMenuVisible = true;
+                }
             });
 
             LoadCoursesCommand = new RelayCommand(_ => LoadCourses());
@@ -74,17 +80,45 @@ namespace Regularnik.ViewModels
         /* ---------- logika ---------- */
         private void Navigate(string destination)
         {
+            if (CurrentView != null)
+                _viewStack.Push(CurrentView);       // zapamiętaj bieżący widok
+
             switch (destination)
             {
-                case "Courses": CurrentView = new CoursesView(); break;
-                case "Statistics": CurrentView = new StatisticsView(); break;
-                case "Catalog": CurrentView = new CatalogView(); break;
-                case "Exit": Application.Current.Shutdown(); return;
+                case "Catalog":
+                    CurrentView = new CatalogView
+                    {
+                        DataContext = new CatalogViewModel(_dbService, OnCourseSelected)
+                    };
+                    break;
+
+                case "Courses":
+                    CurrentView = new CoursesView();
+                    break;
+
+                case "Statistics":
+                    CurrentView = new StatisticsView();
+                    break;
+
+                case "Exit":
+                    Application.Current.Shutdown();
+                    return;
             }
 
-            IsMenuVisible = false;   // schowaj kafelki
+            IsMenuVisible = false; // chowamy główne menu
         }
 
+        /* —— kliknięto kurs —— */
+        private void OnCourseSelected(Course course)
+        {
+            _viewStack.Push(CurrentView);           // zapamiętaj katalog
+            CurrentView = new CourseWordsView
+            {
+                DataContext = new CourseWordsViewModel(_dbService, course)
+            };
+        }
+
+        /* ---------- pobranie kursów ---------- */
         private void LoadCourses()
         {
             Courses.Clear();
