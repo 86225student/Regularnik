@@ -2,6 +2,7 @@
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
+    <LangVersion>latest</LangVersion>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{AE684ED0-797E-4A06-ACBF-126108DAE4DA}</ProjectGuid>
@@ -70,6 +71,7 @@
     </ApplicationDefinition>
     <Compile Include="Converters\InverseBooleanToVisibilityConverter.cs" />
     <Compile Include="Models\Course.cs" />
+    <Compile Include="Models\FileName.cs" />
     <Compile Include="Models\Word.cs" />
     <Compile Include="Services\DatabaseService.cs" />
     <Compile Include="ViewModels\AddCourseViewModel.cs" />
