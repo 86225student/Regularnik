@@ -9,24 +9,30 @@ namespace Regularnik.ViewModels
     {
         private readonly DatabaseService _db;
         private readonly System.Action<Course> _onCourseSelected;
+        private readonly System.Action _onNewCourse;
 
         public ObservableCollection<Course> Courses { get; } =
             new ObservableCollection<Course>();
 
         public ICommand SelectCourseCommand { get; }
+        public ICommand NewCourseCommand { get; }
 
-        public CatalogViewModel(DatabaseService db, System.Action<Course> onCourseSelected)
+        public CatalogViewModel(DatabaseService db,
+                                System.Action<Course> onCourseSelected,
+                                System.Action onNewCourse)
         {
             _db = db;
             _onCourseSelected = onCourseSelected;
+            _onNewCourse = onNewCourse;
 
             LoadCourses();
 
             SelectCourseCommand = new RelayCommand(c =>
             {
-                System.Diagnostics.Debug.WriteLine($"► Klik kurs: {((Course)c).Name}");
                 _onCourseSelected?.Invoke(c as Course);
             });
+
+            NewCourseCommand = new RelayCommand(_ => _onNewCourse?.Invoke());
         }
 
         /* ---------- dane ---------- */

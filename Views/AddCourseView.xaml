@@ -1,0 +1,42 @@
+﻿<UserControl x:Class="Regularnik.Views.AddCourseView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,40" HorizontalAlignment="Center" Width="350">
+
+            <TextBlock Text="Nazwa kursu" Foreground="White"/>
+            <TextBox Text="{Binding CourseName}" Margin="0,0,0,20"/>
+
+            <TextBlock Text="Słowo po polsku" Foreground="White"/>
+            <TextBox Text="{Binding WordPl}" Margin="0,0,0,10"/>
+
+            <TextBlock Text="Słowo po angielsku" Foreground="White"/>
+            <TextBox Text="{Binding WordEn}" Margin="0,0,0,10"/>
+
+            <TextBlock Text="Przykład PL" Foreground="White"/>
+            <TextBox Text="{Binding ExPl}" Margin="0,0,0,10"/>
+
+            <TextBlock Text="Przykład EN" Foreground="White"/>
+            <TextBox Text="{Binding ExEn}" Margin="0,0,0,20"/>
+
+            <Button Content="➕ Dodaj słowo"
+              Command="{Binding AddWordCommand}"
+              Style="{DynamicResource TileButtonStyle}"
+              Width="220" Margin="0,0,0,30"/>
+
+            <ItemsControl ItemsSource="{Binding TempWords}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding WordPl}" Foreground="White"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Button Content="💾 Zapisz kurs"
+              Command="{Binding SaveCourseCommand}"
+              Style="{DynamicResource RoundButtonStyle}"
+              Width="220" Margin="0,30,0,0"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

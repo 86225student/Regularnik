@@ -1,5 +1,5 @@
 ﻿using System.Collections.ObjectModel;
-using System.Collections.Generic;          //  ←  stos
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -7,7 +7,6 @@ using System.Windows.Input;
 using Regularnik.Models;
 using Regularnik.Services;
 using Regularnik.Views;
-using System.Diagnostics;
 
 namespace Regularnik.ViewModels
 {
@@ -38,7 +37,6 @@ namespace Regularnik.ViewModels
             }
         }
 
-        /* ---------- Właściwości-widoczki ---------- */
         public bool IsBackVisible => CurrentView != null;
         public bool IsStartVisible => !IsMenuVisible && CurrentView == null;
 
@@ -48,7 +46,6 @@ namespace Regularnik.ViewModels
         public ICommand BackCommand { get; }
         public ICommand LoadCoursesCommand { get; }
 
-        /* ---------- Data ---------- */
         public ObservableCollection<Course> Courses { get; }
 
         public MainViewModel()
@@ -57,38 +54,39 @@ namespace Regularnik.ViewModels
             Courses = new ObservableCollection<Course>();
 
             ShowMenuCommand = new RelayCommand(_ => IsMenuVisible = true);
-
             NavigateCommand = new RelayCommand(p => Navigate(p?.ToString()));
+            LoadCoursesCommand = new RelayCommand(_ => LoadCourses());
 
             BackCommand = new RelayCommand(_ =>
             {
                 if (_viewStack.Count > 0)
                 {
-                    CurrentView = _viewStack.Pop(); // cofamy o jeden poziom
-                    IsMenuVisible = false;          // zostajemy poza menu
+                    CurrentView = _viewStack.Pop();
+                    IsMenuVisible = false;
                 }
                 else
                 {
-                    CurrentView = null;             // wróć do menu Start
+                    CurrentView = null;
                     IsMenuVisible = true;
                 }
             });
-
-            LoadCoursesCommand = new RelayCommand(_ => LoadCourses());
         }
 
-        /* ---------- logika ---------- */
+        /* ---------- NAWIGACJA ---------- */
         private void Navigate(string destination)
         {
             if (CurrentView != null)
-                _viewStack.Push(CurrentView);       // zapamiętaj bieżący widok
+                _viewStack.Push(CurrentView);
 
             switch (destination)
             {
                 case "Catalog":
                     CurrentView = new CatalogView
                     {
-                        DataContext = new CatalogViewModel(_dbService, OnCourseSelected)
+                        DataContext = new CatalogViewModel(
+                            _dbService,
+                            OnCourseSelected,   // klik istniejący kurs
+                            OnAddCourse)        // ➕ Dodaj kurs
                     };
                     break;
 
@@ -105,20 +103,47 @@ namespace Regularnik.ViewModels
                     return;
             }
 
-            IsMenuVisible = false; // chowamy główne menu
+            IsMenuVisible = false;
         }
 
-        /* —— kliknięto kurs —— */
+        /* ---------- WYBRANO KURS ---------- */
         private void OnCourseSelected(Course course)
         {
-            _viewStack.Push(CurrentView);           // zapamiętaj katalog
+            _viewStack.Push(CurrentView);
             CurrentView = new CourseWordsView
             {
                 DataContext = new CourseWordsViewModel(_dbService, course)
             };
         }
 
-        /* ---------- pobranie kursów ---------- */
+        /* ---------- KLIK „DODAJ WŁASNY KURS” ---------- */
+        private void OnAddCourse()
+        {
+            _viewStack.Push(CurrentView);
+
+            CurrentView = new AddCourseView
+            {
+                DataContext = new AddCourseViewModel(_dbService, OnCourseSaved)
+            };
+        }
+
+        /* Po zapisaniu kursu w kreatorze */
+        private void OnCourseSaved()
+        {
+            // wracamy do katalogu
+            if (_viewStack.Count > 0)
+                CurrentView = _viewStack.Pop();
+
+            // odśwież listę kursów w katalogu (wywołujemy prywatne LoadCourses refleksją)
+            if (CurrentView is CatalogView cv && cv.DataContext is CatalogViewModel vm)
+            {
+                var m = typeof(CatalogViewModel).GetMethod("LoadCourses",
+                         System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                m.Invoke(vm, null);
+            }
+        }
+
+        /* ---------- POBIERANIE KURSÓW (menu Start) ---------- */
         private void LoadCourses()
         {
             Courses.Clear();
@@ -126,7 +151,6 @@ namespace Regularnik.ViewModels
                 Courses.Add(c);
         }
 
-        /* ---------- INotifyPropertyChanged ---------- */
         public event PropertyChangedEventHandler PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string p = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(p));

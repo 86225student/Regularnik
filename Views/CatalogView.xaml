@@ -6,27 +6,32 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel HorizontalAlignment="Center" Margin="0,40">
 
-            <!-- Nagłówek -->
             <TextBlock Text="Dostępne kursy"
-                       Foreground="#FFD93D"
-                       FontSize="26"
-                       FontWeight="Bold"
-                       Margin="0,0,0,25"
-                       TextAlignment="Center"/>
+                 Foreground="#FFD93D"
+                 FontSize="26"
+                 FontWeight="Bold"
+                 Margin="0,0,0,25"
+                 TextAlignment="Center"/>
+
+            <!-- ➕  Dodaj własny kurs  -->
+            <Button Content="➕ Dodaj własny kurs"
+              Style="{DynamicResource TileButtonStyle}"
+              Command="{Binding NewCourseCommand}"
+              FontWeight="Bold"
+              Margin="0,0,0,25"/>
 
             <!-- Lista kursów -->
             <ItemsControl ItemsSource="{Binding Courses}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Button Content="{Binding Name}"
-                                Style="{DynamicResource TileButtonStyle}"
-                                Command="{Binding DataContext.SelectCourseCommand, ElementName=Root}"
-                                CommandParameter="{Binding}"
-                                FontWeight="Bold"
-                                Margin="0,0,0,15"/>
+                    Style="{DynamicResource TileButtonStyle}"
+                    Command="{Binding DataContext.SelectCourseCommand, ElementName=Root}"
+                    CommandParameter="{Binding}"
+                    FontWeight="Bold"
+                    Margin="0,0,0,15"/>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
-
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <StackPanel/>
