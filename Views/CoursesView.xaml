@@ -5,22 +5,25 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel HorizontalAlignment="Center" Margin="0,40">
 
-            <!-- Nagłówek z nazwą kursu -->
-            <TextBlock Text="{Binding CourseName}"
+
+            <TextBlock Text="Wybierz kurs"
                        Foreground="#FFD93D"
                        FontSize="26"
                        FontWeight="Bold"
-                       Margin="0,0,0,25"/>
+                       Margin="0,0,0,25"
+                       TextAlignment="Center"/>
 
-            <!-- Lista słówek -->
-            <ItemsControl ItemsSource="{Binding Words}">
+
+            <ItemsControl ItemsSource="{Binding Courses}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                            <TextBlock Text="{Binding WordPl}" Foreground="White" Width="170"/>
-                            <TextBlock Text=" - " Foreground="#FFD93D"/>
-                            <TextBlock Text="{Binding WordEn}" Foreground="White" Margin="10,0,0,0"/>
-                        </StackPanel>
+                        <Button Content="{Binding Name}"
+                                Style="{DynamicResource TileButtonStyle}"
+                                Command="{Binding DataContext.SelectCourseCommand,
+                                                  RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}"
+                                FontWeight="Bold"
+                                Margin="0,0,0,15"/>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>

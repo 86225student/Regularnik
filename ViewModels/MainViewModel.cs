@@ -8,12 +8,15 @@ using Regularnik.Models;
 using Regularnik.Services;
 using Regularnik.Views;
 using System.Diagnostics;
+using System.Security.Cryptography;
 
 namespace Regularnik.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
-        private readonly DatabaseService _dbService;
+        private readonly DatabaseService _dbService; /// <summary>
+        /// tutaj zmiany
+        /// </summary>
         private readonly Stack<object> _viewStack = new Stack<object>();
 
         /* ---------- START / MENU ---------- */
@@ -49,15 +52,13 @@ namespace Regularnik.ViewModels
         public ICommand BackCommand { get; }
         public ICommand LoadCoursesCommand { get; }
 
-        public ObservableCollection<Course> Courses { get; }
+        public ObservableCollection<Course> Courses { get; }//zmiany
 
         public MainViewModel()
         {
             _dbService = new DatabaseService();
             Courses = new ObservableCollection<Course>();
-
             ShowMenuCommand = new RelayCommand(_ => IsMenuVisible = true);
-
             NavigateCommand = new RelayCommand(p => Navigate(p?.ToString()));
 
             BackCommand = new RelayCommand(_ =>
@@ -110,7 +111,10 @@ namespace Regularnik.ViewModels
                     break;
 
                 case "Courses":
-                    CurrentView = new CoursesView();
+                    CurrentView = new CoursesView
+                    {
+                        DataContext = new CoursesViewModel(_dbService, OnCourseChosen)
+                    };
                     break;
 
                 case "Statistics":
@@ -139,10 +143,18 @@ namespace Regularnik.ViewModels
         private void OnAddCourse()
         {
             _viewStack.Push(CurrentView);
-
             CurrentView = new AddCourseView
             {
                 DataContext = new AddCourseViewModel(_dbService, OnCourseSaved)
+            };
+        }
+
+        private void OnCourseChosen(Course c)
+        {
+            _viewStack.Push(CurrentView);
+            CurrentView = new CourseSessionView
+            {
+                DataContext = new CourseSessionViewModel(_dbService, c)
             };
         }
 
@@ -159,6 +171,20 @@ namespace Regularnik.ViewModels
                 var m = typeof(CatalogViewModel).GetMethod("LoadCourses",
                          System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 m.Invoke(vm, null);
+            }
+        }
+
+        private void GoBack()
+        {
+            if (_viewStack.Count > 0)
+            {
+                CurrentView = _viewStack.Pop();
+                IsMenuVisible = false;
+            }
+            else
+            {
+                CurrentView = null;
+                IsMenuVisible = true;
             }
         }
 

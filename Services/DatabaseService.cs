@@ -33,9 +33,6 @@ namespace Regularnik.Services
             }
         }
 
-        /// <summary>
-        /// Dodaje kurs i zwraca wygenerowane ID.
-        /// </summary>
         public int AddCourse(string name)
         {
             var cmd = new SQLiteCommand(
@@ -50,8 +47,10 @@ namespace Regularnik.Services
         public IEnumerable<Word> GetWords(int courseId)
         {
             var cmd = new SQLiteCommand(
-                "SELECT id, word_pl, word_en FROM words WHERE course_id = @cid",
-                _connection);
+                 "SELECT id, word_pl, word_en, example_pl, example_en, " +
+                 "       correct_count, category, next_review_date " +
+                 "FROM words WHERE course_id = @cid",
+                 _connection);
 
             cmd.Parameters.AddWithValue("@cid", courseId);
 
@@ -62,17 +61,20 @@ namespace Regularnik.Services
                     yield return new Word
                     {
                         Id = Convert.ToInt32(reader["id"]),
+                        CourseId = courseId,
                         WordPl = reader["word_pl"].ToString(),
-                        WordEn = reader["word_en"].ToString()
+                        WordEn = reader["word_en"].ToString(),
+                        ExamplePl = reader["example_pl"]?.ToString(),
+                        ExampleEn = reader["example_en"]?.ToString(),
+                        Category = reader["category"]?.ToString(),
+                        CorrectCount = Convert.ToInt32(reader["correct_count"]),
+                        NextReviewDate = reader["next_review_date"] == DBNull.Value
+                     ? null
+                     : DateTime.Parse(reader["next_review_date"].ToString())
                     };
                 }
             }
         }
-
-        /// <summary>
-        /// Dodaje słowo do tabeli words.
-        /// category = NOWE, correct_count = 0, next_review_date = NULL
-        /// </summary>
         public void AddWord(Word w)
         {
             var cmd = new SQLiteCommand(
