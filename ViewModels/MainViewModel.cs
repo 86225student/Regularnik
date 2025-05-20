@@ -12,7 +12,7 @@ namespace Regularnik.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
-        private readonly DatabaseService _dbService;
+        private readonly DatabaseService _dbService = new DatabaseService();
         private readonly Stack<object> _viewStack = new Stack<object>();
 
         /* ---------- START / MENU ---------- */
@@ -25,6 +25,8 @@ namespace Regularnik.ViewModels
 
         /* ---------- OBSZAR ROBOCZY ---------- */
         private object _currentView;
+        private string dest;
+
         public object CurrentView
         {
             get => _currentView;
@@ -50,9 +52,6 @@ namespace Regularnik.ViewModels
 
         public MainViewModel()
         {
-            _dbService = new DatabaseService();
-            Courses = new ObservableCollection<Course>();
-
             ShowMenuCommand = new RelayCommand(_ => IsMenuVisible = true);
             NavigateCommand = new RelayCommand(p => Navigate(p?.ToString()));
             LoadCoursesCommand = new RelayCommand(_ => LoadCourses());
@@ -78,7 +77,7 @@ namespace Regularnik.ViewModels
             if (CurrentView != null)
                 _viewStack.Push(CurrentView);
 
-            switch (destination)
+            switch (dest)
             {
                 case "Catalog":
                     CurrentView = new CatalogView
@@ -91,7 +90,10 @@ namespace Regularnik.ViewModels
                     break;
 
                 case "Courses":
-                    CurrentView = new CoursesView();
+                    CurrentView = new CoursesView
+                    {
+                        DataContext = new CoursesViewModel(_dbService, OnCourseChosen)
+                    };
                     break;
 
                 case "Statistics":
@@ -113,6 +115,16 @@ namespace Regularnik.ViewModels
             CurrentView = new CourseWordsView
             {
                 DataContext = new CourseWordsViewModel(_dbService, course)
+            };
+        }
+
+        /* —— klik w „Kursy” —— */
+        private void OnCourseChosen(Course c)
+        {
+            _viewStack.Push(CurrentView);
+            CurrentView = new CourseSessionView
+            {
+                DataContext = new CourseSessionViewModel(_dbService, c)
             };
         }
 

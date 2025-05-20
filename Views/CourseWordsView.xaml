@@ -57,8 +57,6 @@
                 </ItemsControl.ItemsPanel>
             </ItemsControl>
         </ScrollViewer>
-        
-        
 
         <!-- pusta, przezroczysta stopka – odsunięcie od przycisku „Wróć” -->
         <Border Grid.Row="2" Background="Transparent"/>
