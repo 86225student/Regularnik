@@ -1,5 +1,5 @@
 ﻿using System.Collections.ObjectModel;
-using System.Collections.Generic;
+using System.Collections.Generic;          //  ←  stos
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -7,12 +7,13 @@ using System.Windows.Input;
 using Regularnik.Models;
 using Regularnik.Services;
 using Regularnik.Views;
+using System.Diagnostics;
 
 namespace Regularnik.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
-        private readonly DatabaseService _dbService = new DatabaseService();
+        private readonly DatabaseService _dbService;
         private readonly Stack<object> _viewStack = new Stack<object>();
 
         /* ---------- START / MENU ---------- */
@@ -52,8 +53,27 @@ namespace Regularnik.ViewModels
 
         public MainViewModel()
         {
+            _dbService = new DatabaseService();
+            Courses = new ObservableCollection<Course>();
+
             ShowMenuCommand = new RelayCommand(_ => IsMenuVisible = true);
+
             NavigateCommand = new RelayCommand(p => Navigate(p?.ToString()));
+
+            BackCommand = new RelayCommand(_ =>
+            {
+                if (_viewStack.Count > 0)
+                {
+                    CurrentView = _viewStack.Pop(); // cofamy o jeden poziom
+                    IsMenuVisible = false;          // zostajemy poza menu
+                }
+                else
+                {
+                    CurrentView = null;             // wróć do menu Start
+                    IsMenuVisible = true;
+                }
+            });
+
             LoadCoursesCommand = new RelayCommand(_ => LoadCourses());
 
             BackCommand = new RelayCommand(_ =>
@@ -75,9 +95,9 @@ namespace Regularnik.ViewModels
         private void Navigate(string destination)
         {
             if (CurrentView != null)
-                _viewStack.Push(CurrentView);
+                _viewStack.Push(CurrentView);       // zapamiętaj bieżący widok
 
-            switch (dest)
+            switch (destination)
             {
                 case "Catalog":
                     CurrentView = new CatalogView
@@ -90,10 +110,7 @@ namespace Regularnik.ViewModels
                     break;
 
                 case "Courses":
-                    CurrentView = new CoursesView
-                    {
-                        DataContext = new CoursesViewModel(_dbService, OnCourseChosen)
-                    };
+                    CurrentView = new CoursesView();
                     break;
 
                 case "Statistics":
@@ -105,26 +122,16 @@ namespace Regularnik.ViewModels
                     return;
             }
 
-            IsMenuVisible = false;
+            IsMenuVisible = false; // chowamy główne menu
         }
 
         /* ---------- WYBRANO KURS ---------- */
         private void OnCourseSelected(Course course)
         {
-            _viewStack.Push(CurrentView);
+            _viewStack.Push(CurrentView);           // zapamiętaj katalog
             CurrentView = new CourseWordsView
             {
                 DataContext = new CourseWordsViewModel(_dbService, course)
-            };
-        }
-
-        /* —— klik w „Kursy” —— */
-        private void OnCourseChosen(Course c)
-        {
-            _viewStack.Push(CurrentView);
-            CurrentView = new CourseSessionView
-            {
-                DataContext = new CourseSessionViewModel(_dbService, c)
             };
         }
 

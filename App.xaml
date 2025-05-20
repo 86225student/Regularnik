@@ -1,50 +1,7 @@
 ﻿<Application x:Class="Regularnik.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:conv="clr-namespace:Regularnik.Converters">
-
+             StartupUri="Views/MainWindow.xaml">
     <Application.Resources>
-
-        <!-- KONWERTERY -->
-        <BooleanToVisibilityConverter               x:Key="BoolToVis"/>
-        <conv:InverseBooleanToVisibilityConverter   x:Key="InvBoolToVis"/>
-        <conv:EnumToVisibilityConverter             x:Key="EnumToVisibility"/>
-
-        <!-- STYL: niebieski kafelek -->
-        <Style x:Key="TileButtonStyle" TargetType="Button">
-            <Setter Property="Width"            Value="220"/>
-            <Setter Property="Height"           Value="48"/>
-            <Setter Property="Margin"           Value="0,0,0,15"/>
-            <Setter Property="FontSize"         Value="16"/>
-            <Setter Property="Foreground"       Value="#1E2A38"/>
-            <Setter Property="Background"       Value="#4E8AB9"/>
-            <Setter Property="BorderThickness"  Value="0"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                CornerRadius="10">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#FFE47A"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <!-- STYL: żółty przycisk Start/Wróć -->
-        <Style x:Key="RoundButtonStyle"
-               TargetType="Button"
-               BasedOn="{StaticResource TileButtonStyle}">
-            <Setter Property="Width"      Value="160"/>
-            <Setter Property="Height"     Value="50"/>
-            <Setter Property="Background" Value="#FFD93D"/>
-        </Style>
-
     </Application.Resources>
 </Application>
