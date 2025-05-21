@@ -3,7 +3,9 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <!-- zostawiamy 80px na przycisk Wróć (lub tyle, ile potrzebujesz) -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                Padding="0,0,0,95">
         <StackPanel HorizontalAlignment="Center" Margin="0,40">
 
             <TextBlock Text="Dostępne kursy"
@@ -18,7 +20,7 @@
               Style="{DynamicResource TileButtonStyle}"
               Command="{Binding NewCourseCommand}"
               FontWeight="Bold"
-              Margin="0,0,0,25"/>
+              Margin="0,0,0,15"/>
 
             <!-- Lista kursów -->
             <ItemsControl ItemsSource="{Binding Courses}">
