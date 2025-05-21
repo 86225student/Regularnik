@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SQLite;
 using Regularnik.Models;
 
@@ -15,12 +16,11 @@ namespace Regularnik.Services
             _connection.Open();
         }
 
-        /* ---------- kursy ---------- */
+        /* ---------- pobierz wszystkie kursy ---------- */
         public IEnumerable<Course> GetCourses()
         {
             var cmd = new SQLiteCommand("SELECT id, name FROM courses", _connection);
-
-            using (var reader = cmd.ExecuteReader())
+            using (SQLiteDataReader reader = cmd.ExecuteReader())
             {
                 while (reader.Read())
                 {
@@ -33,28 +33,39 @@ namespace Regularnik.Services
             }
         }
 
+        /* ---------- sprawdź, czy nazwa kursu już istnieje (case-insensitive) ---------- */
+        public bool CourseNameExists(string name)
+        {
+            var cmd = new SQLiteCommand(
+                "SELECT COUNT(1) FROM courses WHERE lower(name) = lower(@n)",
+                _connection);
+            cmd.Parameters.AddWithValue("@n", name);
+            object result = cmd.ExecuteScalar();
+            int count = Convert.ToInt32(result);
+            return count > 0;
+        }
+
+        /* ---------- dodaj kurs, zwróć jego nowe ID ---------- */
         public int AddCourse(string name)
         {
             var cmd = new SQLiteCommand(
                 "INSERT INTO courses (name) VALUES (@n); SELECT last_insert_rowid();",
                 _connection);
-
             cmd.Parameters.AddWithValue("@n", name);
-            return Convert.ToInt32(cmd.ExecuteScalar());
+            object scalar = cmd.ExecuteScalar();
+            return Convert.ToInt32(scalar);
         }
 
-        /* ---------- słówka ---------- */
+        /* ---------- pobierz słowa dla danego kursu ---------- */
         public IEnumerable<Word> GetWords(int courseId)
         {
             var cmd = new SQLiteCommand(
-                 "SELECT id, word_pl, word_en, example_pl, example_en, " +
-                 "       correct_count, category, next_review_date " +
-                 "FROM words WHERE course_id = @cid",
-                 _connection);
-
+                "SELECT id, word_pl, word_en, example_pl, example_en, correct_count, category, next_review_date " +
+                "FROM words WHERE course_id = @cid",
+                _connection);
             cmd.Parameters.AddWithValue("@cid", courseId);
 
-            using (var reader = cmd.ExecuteReader())
+            using (SQLiteDataReader reader = cmd.ExecuteReader())
             {
                 while (reader.Read())
                 {
@@ -64,27 +75,27 @@ namespace Regularnik.Services
                         CourseId = courseId,
                         WordPl = reader["word_pl"].ToString(),
                         WordEn = reader["word_en"].ToString(),
-                        ExamplePl = reader["example_pl"]?.ToString(),
-                        ExampleEn = reader["example_en"]?.ToString(),
-                        Category = reader["category"]?.ToString(),
+                        ExamplePl = reader["example_pl"] == DBNull.Value ? null : reader["example_pl"].ToString(),
+                        ExampleEn = reader["example_en"] == DBNull.Value ? null : reader["example_en"].ToString(),
                         CorrectCount = Convert.ToInt32(reader["correct_count"]),
+                        Category = reader["category"].ToString(),
                         NextReviewDate = reader["next_review_date"] == DBNull.Value
-                     ? null
-                     : DateTime.Parse(reader["next_review_date"].ToString())
+                                         ? (DateTime?)null
+                                         : DateTime.Parse(reader["next_review_date"].ToString())
                     };
                 }
             }
         }
+
+        /* ---------- dodaj słowo ---------- */
         public void AddWord(Word w)
         {
             var cmd = new SQLiteCommand(
                 @"INSERT INTO words
-                    (course_id, word_pl, word_en, example_pl, example_en,
-                     category, correct_count, next_review_date)
+                    (course_id, word_pl, word_en, example_pl, example_en, category, correct_count, next_review_date)
                   VALUES
                     (@cid, @pl, @en, @expl, @exen, @cat, @cc, NULL)",
                 _connection);
-
             cmd.Parameters.AddWithValue("@cid", w.CourseId);
             cmd.Parameters.AddWithValue("@pl", w.WordPl);
             cmd.Parameters.AddWithValue("@en", w.WordEn);
@@ -92,7 +103,6 @@ namespace Regularnik.Services
             cmd.Parameters.AddWithValue("@exen", string.IsNullOrWhiteSpace(w.ExampleEn) ? (object)DBNull.Value : w.ExampleEn);
             cmd.Parameters.AddWithValue("@cat", "NOWE");
             cmd.Parameters.AddWithValue("@cc", 0);
-
             cmd.ExecuteNonQuery();
         }
     }
