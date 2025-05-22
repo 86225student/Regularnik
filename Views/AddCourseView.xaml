@@ -74,6 +74,7 @@
         <!-- PRAWY PANEL: lista słówek, wrap do ~3 kolumn -->
         <ScrollViewer Grid.Column="1"
                   Margin="40,0,0,0"
+                  Padding="0,0,0,80"
                   VerticalScrollBarVisibility="Auto">
             <ItemsControl ItemsSource="{Binding TempWords}">
                 <ItemsControl.ItemsPanel>
