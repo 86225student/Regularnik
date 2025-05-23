@@ -97,7 +97,10 @@ namespace Regularnik.ViewModels
                     break;
 
                 case "Statistics":
-                    CurrentView = new StatisticsView();
+                    CurrentView = new StatisticsView
+                    {
+                        DataContext = new StatisticsViewModel(_dbService)
+                    };
                     break;
 
                 case "Exit":

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.Linq;
+//using Microsoft.Data.Sqlite;
 using Regularnik.Models;
 
 namespace Regularnik.Services
@@ -154,5 +155,43 @@ namespace Regularnik.Services
             cmd.Parameters.AddWithValue("@id", w.Id);
             cmd.ExecuteNonQuery();
         }
+        public IEnumerable<StatsEntry> GetStats(int courseId, DateTime start, DateTime end)
+        {
+            var list = new List<StatsEntry>();
+            using (var con = new SQLiteConnection("Data Source=Data/app.db;Version=3;"))
+            {
+                con.Open();
+
+                var cmd = new SQLiteCommand(@"
+            SELECT 
+                wpl.practice_date AS date,
+                COUNT(*) AS total,
+                SUM(CASE WHEN w.correct_count > 0 THEN 1 ELSE 0 END) AS correct
+            FROM word_practice_log wpl
+            JOIN words w ON wpl.word_id = w.id
+            WHERE w.course_id = @cid
+              AND wpl.practice_date BETWEEN @start AND @end
+            GROUP BY wpl.practice_date
+            ORDER BY wpl.practice_date", con);
+
+                cmd.Parameters.AddWithValue("@cid", courseId);
+                cmd.Parameters.AddWithValue("@start", start.ToString("yyyy-MM-dd"));
+                cmd.Parameters.AddWithValue("@end", end.ToString("yyyy-MM-dd"));
+
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    list.Add(new StatsEntry
+                    {
+                        Date = DateTime.Parse(reader["date"].ToString()),
+                        TotalQuestions = Convert.ToInt32(reader["total"]),
+                        CorrectAnswers = Convert.ToInt32(reader["correct"])
+                    });
+                }
+            }
+            return list;
+        }
+
+
     }
 }
