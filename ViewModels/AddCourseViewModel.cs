@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
@@ -13,50 +15,50 @@ namespace Regularnik.ViewModels
     {
         private readonly DatabaseService _db;
         private readonly Action _onSaved;
+        private readonly bool _isEditMode;
+        private readonly int _editingCourseId;
+        private Word _selectedWord;
 
         public string CourseName { get; set; }
+        public string WordPl { get; set; }
+        public string WordEn { get; set; }
+        public string ExPl { get; set; }
+        public string ExEn { get; set; }
 
-        private string _wordPl;
-        public string WordPl
-        {
-            get => _wordPl;
-            set { _wordPl = value; OnPropertyChanged(); }
-        }
+        public ObservableCollection<Word> TempWords { get; } = new ObservableCollection<Word>();
 
-        private string _wordEn;
-        public string WordEn
-        {
-            get => _wordEn;
-            set { _wordEn = value; OnPropertyChanged(); }
-        }
+        public ICommand AddWordCommand { get; private set; }
+        public ICommand SaveCourseCommand { get; private set; }
+        public ICommand BackCommand { get; private set; }
+        public ICommand DeleteWordCommand { get; private set; }
+        public ICommand SelectWordCommand { get; private set; }
 
-        private string _exPl;
-        public string ExPl
-        {
-            get => _exPl;
-            set { _exPl = value; OnPropertyChanged(); }
-        }
-
-        private string _exEn;
-        public string ExEn
-        {
-            get => _exEn;
-            set { _exEn = value; OnPropertyChanged(); }
-        }
-
-        public ObservableCollection<Word> TempWords { get; } =
-            new ObservableCollection<Word>();
-
-        public ICommand AddWordCommand { get; }
-        public ICommand SaveCourseCommand { get; }
-        public ICommand BackCommand { get; }
-
+        // Konstruktor do tworzenia nowego kursu
         public AddCourseViewModel(DatabaseService db, Action onSaved)
         {
             _db = db;
             _onSaved = onSaved;
+            _isEditMode = false;
 
-            // Komenda dodająca słowo tylko do pamięci
+            InitializeCommands();
+        }
+
+        // Konstruktor do edycji istniejącego kursu
+        public AddCourseViewModel(DatabaseService db,
+                                  Action onSaved,
+                                  Course courseToEdit,
+                                  IEnumerable<Word> existingWords)
+            : this(db, onSaved)
+        {
+            _isEditMode = true;
+            _editingCourseId = courseToEdit.Id;
+            CourseName = courseToEdit.Name;
+            foreach (var w in existingWords)
+                TempWords.Add(w);
+        }
+
+        private void InitializeCommands()
+        {
             AddWordCommand = new RelayCommand(_ =>
             {
                 if (string.IsNullOrWhiteSpace(CourseName))
@@ -64,71 +66,110 @@ namespace Regularnik.ViewModels
                     MessageBox.Show("Musisz podać nazwę kursu.", "Uwaga", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
-
                 if (string.IsNullOrWhiteSpace(WordPl) || string.IsNullOrWhiteSpace(WordEn))
                 {
-                    MessageBox.Show("Podaj słowo po polsku i po angielsku.", "Uwaga", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Podaj słowo po polsku i angielsku.", "Uwaga", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
                 var w = new Word
                 {
+                    Id = _isEditMode ? 0 : 0, // nowe słowo ma Id=0
                     WordPl = WordPl.Trim(),
                     WordEn = WordEn.Trim(),
                     ExamplePl = string.IsNullOrWhiteSpace(ExPl) ? null : ExPl.Trim(),
                     ExampleEn = string.IsNullOrWhiteSpace(ExEn) ? null : ExEn.Trim(),
                     Category = "NOWE",
                     CorrectCount = 0,
-                    NextReviewDate = null
+                    NextReviewDate = null,
+                    CourseId = _isEditMode ? _editingCourseId : 0
                 };
-
                 TempWords.Add(w);
-
-                // Reset pól formularza
-                WordPl = ExPl = WordEn = ExEn = string.Empty;
+                ResetEntryFields();
             });
 
-            // Komenda zapisująca kurs i słowa do bazy
             SaveCourseCommand = new RelayCommand(_ =>
             {
-                if (TempWords.Count == 0)
+                if (string.IsNullOrWhiteSpace(CourseName) || TempWords.Count == 0)
                 {
-                    MessageBox.Show("Dodaj przynajmniej jedno słowo.", "Uwaga", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Uzupełnij nazwę i dodaj przynajmniej jedno słowo.", "Uwaga", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                // 1) utwórz kurs w bazie
-                var trimmedName = CourseName.Trim();
-                int newCourseId = _db.AddCourse(trimmedName);
-
-                // 2) przypisz CourseId i zapisz każde słowo
-                foreach (var w in TempWords)
+                if (_isEditMode)
                 {
-                    w.CourseId = newCourseId;
-                    _db.AddWord(w);
+                    // Aktualizacja kursu
+                    _db.UpdateCourseName(_editingCourseId, CourseName.Trim());
+                    // Dodaj/edytuj słowa
+                    foreach (var w in TempWords)
+                    {
+                        if (w.Id == 0)
+                        {
+                            w.CourseId = _editingCourseId;
+                            _db.AddWord(w);
+                        }
+                        else
+                        {
+                            _db.UpdateWord(w);
+                        }
+                    }
+                    // Usuń słowa, które zostały usunięte w TempWords
+                    var keep = TempWords.Where(w => w.Id > 0).Select(w => w.Id).ToList();
+                    _db.DeleteWordsNotInCourse(_editingCourseId, keep);
+                }
+                else
+                {
+                    // Tworzenie nowego kursu
+                    int newCourseId = _db.AddCourse(CourseName.Trim());
+                    foreach (var w in TempWords)
+                    {
+                        w.CourseId = newCourseId;
+                        _db.AddWord(w);
+                    }
                 }
 
-                // 3) wykonaj callback nawigacji
                 _onSaved?.Invoke();
             });
 
-            // Komenda anulująca i czyszcząca dane
             BackCommand = new RelayCommand(_ =>
             {
-                // Wyczyść słowa z pamięci
                 TempWords.Clear();
-
-                // Wyczyść pola formularza
                 CourseName = WordPl = WordEn = ExPl = ExEn = string.Empty;
                 OnPropertyChanged(nameof(CourseName));
                 OnPropertyChanged(nameof(WordPl));
                 OnPropertyChanged(nameof(WordEn));
                 OnPropertyChanged(nameof(ExPl));
                 OnPropertyChanged(nameof(ExEn));
-
-                // Wróć do poprzedniego widoku (np. _onSaved używane do nawigacji)
                 _onSaved?.Invoke();
             });
+
+            SelectWordCommand = new RelayCommand(param =>
+            {
+                _selectedWord = param as Word;
+                if (_selectedWord != null)
+                {
+                    WordPl = _selectedWord.WordPl;
+                    WordEn = _selectedWord.WordEn;
+                    ExPl = _selectedWord.ExamplePl;
+                    ExEn = _selectedWord.ExampleEn;
+                }
+            });
+
+            DeleteWordCommand = new RelayCommand(param =>
+            {
+                var w = param as Word;
+                if (w != null)
+                    TempWords.Remove(w);
+            });
+        }
+
+        private void ResetEntryFields()
+        {
+            WordPl = ExPl = WordEn = ExEn = string.Empty;
+            OnPropertyChanged(nameof(WordPl));
+            OnPropertyChanged(nameof(ExPl));
+            OnPropertyChanged(nameof(WordEn));
+            OnPropertyChanged(nameof(ExEn));
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Collections.ObjectModel;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
@@ -35,9 +36,13 @@ namespace Regularnik.ViewModels
         public bool IsMenuVisible
         {
             get => _isMenuVisible;
-            set { _isMenuVisible = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsStartVisible)); }
+            set
+            {
+                _isMenuVisible = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsStartVisible));
+            }
         }
-
         public bool IsStartVisible => !IsMenuVisible && CurrentView == null;
 
         /* ---------- OBSZAR ROBOCZY ---------- */
@@ -53,7 +58,6 @@ namespace Regularnik.ViewModels
                 OnPropertyChanged(nameof(IsStartVisible));
             }
         }
-
         public bool IsBackVisible => CurrentView != null;
 
         /* ---------- KOMENDY ---------- */
@@ -65,7 +69,7 @@ namespace Regularnik.ViewModels
         /* ---------- DANE MENU START ---------- */
         public ObservableCollection<Course> Courses { get; }
 
-        /* ---------- NAWIGACJA ---------- */
+        /* ---------- NAWIGACJA GŁÓWNA ---------- */
         private void Navigate(string destination)
         {
             if (CurrentView != null)
@@ -86,7 +90,9 @@ namespace Regularnik.ViewModels
                 case "Courses":
                     CurrentView = new CoursesView
                     {
-                        DataContext = new CoursesViewModel(_dbService, OnCourseChosen)
+                        DataContext = new CoursesViewModel(
+                            _dbService,
+                            OnCourseChosen)
                     };
                     break;
 
@@ -102,63 +108,91 @@ namespace Regularnik.ViewModels
             IsMenuVisible = false;
         }
 
+        /* ---------- OTWIERANIE WIDOKU SŁÓWEK ---------- */
         private void OnCourseSelected(Course course)
         {
             _viewStack.Push(CurrentView);
+
+            // Wczytaj słówka do listy, przekaż callback do edycji
             CurrentView = new CourseWordsView
             {
-                DataContext = new CourseWordsViewModel(_dbService, course)
+                DataContext = new CourseWordsViewModel(
+                    _dbService,
+                    course,
+                    OnCourseEdit)
             };
         }
 
+        /* ---------- OTWIERANIE WIDOKU DODAWANIA NOWEGO KURSU ---------- */
         private void OnAddCourse()
         {
             _viewStack.Push(CurrentView);
             CurrentView = new AddCourseView
             {
-                DataContext = new AddCourseViewModel(_dbService, OnCourseSaved)
+                DataContext = new AddCourseViewModel(
+                    _dbService,
+                    OnCourseSaved)
             };
         }
 
-        private void OnCourseChosen(Course c)
+        /* ---------- OTWIERANIE WIDOKU SESJI KURSOWEJ ---------- */
+        private void OnCourseChosen(Course course)
         {
             _viewStack.Push(CurrentView);
             CurrentView = new CourseSessionView
             {
-                DataContext = new CourseSessionViewModel(_dbService, c)
+                DataContext = new CourseSessionViewModel(
+                    _dbService,
+                    course)
             };
         }
 
+        /* ---------- CALLBACK EDYCJI KURSU (NOWA METODA) ---------- */
+        private void OnCourseEdit(Course courseToEdit)
+        {
+            _viewStack.Push(CurrentView);
+
+            // Wczytaj istniejące słówka z bazy
+            var existingWords = _dbService.GetWords(courseToEdit.Id).ToList();
+
+            // Przejdź do widoku edycji, przekazując kurs i słowa
+            CurrentView = new AddCourseView
+            {
+                DataContext = new AddCourseViewModel(
+                    _dbService,
+                    OnCourseSaved,
+                    courseToEdit,
+                    existingWords)
+            };
+        }
+
+        /* ---------- PO ZAPISIE KURSU ---------- */
         private void OnCourseSaved()
         {
-            // wracamy do poprzedniego widoku (katalog)
+            // Wróć do poprzedniego widoku (np. katalog)
             if (_viewStack.Count > 0)
                 CurrentView = _viewStack.Pop();
 
-            // odśwież katalog
-            if (CurrentView is CatalogView cv && cv.DataContext is CatalogViewModel vm)
+            // Jeśli to był katalog, odśwież listę
+            if (CurrentView is CatalogView cv &&
+                cv.DataContext is CatalogViewModel vm)
             {
-                var mi = typeof(CatalogViewModel).GetMethod(
-                    "LoadCourses",
-                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-                mi?.Invoke(vm, null);
+                vm.LoadCourses();
             }
         }
 
+        /* ---------- BACK ---------- */
         private void GoBack()
         {
             if (_viewStack.Count > 0)
-            {
                 CurrentView = _viewStack.Pop();
-                IsMenuVisible = false;
-            }
             else
-            {
                 CurrentView = null;
-                IsMenuVisible = true;
-            }
+
+            IsMenuVisible = false;
         }
 
+        /* ---------- ŁADOWANIE KATALOGU ---------- */
         private void LoadCourses()
         {
             Courses.Clear();

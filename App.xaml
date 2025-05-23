@@ -9,6 +9,7 @@
         <BooleanToVisibilityConverter               x:Key="BoolToVis"/>
         <conv:InverseBooleanToVisibilityConverter   x:Key="InvBoolToVis"/>
         <conv:EnumToVisibilityConverter             x:Key="EnumToVisibility"/>
+        <conv:BoolToEditHeaderConverter             x:Key="BoolToEditHeaderConverter"/>
 
         <!-- STYL: niebieski kafelek -->
         <Style x:Key="TileButtonStyle" TargetType="Button">

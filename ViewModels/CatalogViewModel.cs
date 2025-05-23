@@ -36,7 +36,7 @@ namespace Regularnik.ViewModels
         }
 
         /* ---------- dane ---------- */
-        private void LoadCourses()
+        public void LoadCourses()
         {
             Courses.Clear();
             foreach (var c in _db.GetCourses())

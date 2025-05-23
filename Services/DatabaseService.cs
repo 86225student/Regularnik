@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Linq;
 using Regularnik.Models;
 
 namespace Regularnik.Services
@@ -103,6 +104,54 @@ namespace Regularnik.Services
             cmd.Parameters.AddWithValue("@exen", string.IsNullOrWhiteSpace(w.ExampleEn) ? (object)DBNull.Value : w.ExampleEn);
             cmd.Parameters.AddWithValue("@cat", "NOWE");
             cmd.Parameters.AddWithValue("@cc", 0);
+            cmd.ExecuteNonQuery();
+        }
+
+        // 1) Aktualizacja nazwy kursu
+        public void UpdateCourseName(int courseId, string newName)
+        {
+            var cmd = new SQLiteCommand(
+                "UPDATE courses SET name = @n WHERE id = @id", _connection);
+            cmd.Parameters.AddWithValue("@n", newName);
+            cmd.Parameters.AddWithValue("@id", courseId);
+            cmd.ExecuteNonQuery();
+        }
+
+        // 2) Usunięcie słowa
+        public void DeleteWord(int wordId)
+        {
+            var cmd = new SQLiteCommand(
+                "DELETE FROM words WHERE id = @id", _connection);
+            cmd.Parameters.AddWithValue("@id", wordId);
+            cmd.ExecuteNonQuery();
+        }
+        public void DeleteWordsNotInCourse(int courseId, List<int> keepIds)
+        {
+            string sql;
+            if (keepIds.Any())
+                sql = $"DELETE FROM words WHERE course_id = @cid AND id NOT IN ({string.Join(",", keepIds)})";
+            else
+                sql = "DELETE FROM words WHERE course_id = @cid";
+
+            using var cmd = new SQLiteCommand(sql, _connection);
+            cmd.Parameters.AddWithValue("@cid", courseId);
+            cmd.ExecuteNonQuery();
+        }
+        // 3) Aktualizacja słowa
+        public void UpdateWord(Word w)
+        {
+            var cmd = new SQLiteCommand(@"
+        UPDATE words 
+           SET word_pl = @pl,
+               word_en = @en,
+               example_pl = @expl,
+               example_en = @exen
+         WHERE id = @id", _connection);
+            cmd.Parameters.AddWithValue("@pl", w.WordPl);
+            cmd.Parameters.AddWithValue("@en", w.WordEn);
+            cmd.Parameters.AddWithValue("@expl", (object)w.ExamplePl ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@exen", (object)w.ExampleEn ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@id", w.Id);
             cmd.ExecuteNonQuery();
         }
     }
