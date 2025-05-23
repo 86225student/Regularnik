@@ -17,10 +17,12 @@
 
             <!-- ➕  Dodaj własny kurs  -->
             <Button Content="➕ Dodaj własny kurs"
-              Style="{DynamicResource TileButtonStyle}"
+              Style="{DynamicResource RoundButtonStyle}"
               Command="{Binding NewCourseCommand}"
               FontWeight="Bold"
-              Margin="0,0,0,15"/>
+              Margin="0,0,0,15"
+              Width="220"
+              HorizontalAlignment="Center"/>
 
             <!-- Lista kursów -->
             <ItemsControl ItemsSource="{Binding Courses}">

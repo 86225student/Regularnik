@@ -13,7 +13,6 @@ namespace Regularnik.ViewModels
     {
         private readonly DatabaseService _db;
         private readonly Action _onSaved;
-        private int _tempCourseId = -1;
 
         public string CourseName { get; set; }
 
@@ -50,24 +49,19 @@ namespace Regularnik.ViewModels
 
         public ICommand AddWordCommand { get; }
         public ICommand SaveCourseCommand { get; }
+        public ICommand BackCommand { get; }
 
         public AddCourseViewModel(DatabaseService db, Action onSaved)
         {
             _db = db;
             _onSaved = onSaved;
 
+            // Komenda dodająca słowo tylko do pamięci
             AddWordCommand = new RelayCommand(_ =>
             {
                 if (string.IsNullOrWhiteSpace(CourseName))
                 {
                     MessageBox.Show("Musisz podać nazwę kursu.", "Uwaga", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                string trimmedName = CourseName.Trim();
-                if (_tempCourseId == -1 && _db.CourseNameExists(trimmedName))
-                {
-                    MessageBox.Show($"Kurs „{trimmedName}” już istnieje.", "Uwaga", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
@@ -77,14 +71,8 @@ namespace Regularnik.ViewModels
                     return;
                 }
 
-                if (_tempCourseId == -1)
-                {
-                    _tempCourseId = _db.AddCourse(trimmedName);
-                }
-
                 var w = new Word
                 {
-                    CourseId = _tempCourseId,
                     WordPl = WordPl.Trim(),
                     WordEn = WordEn.Trim(),
                     ExamplePl = string.IsNullOrWhiteSpace(ExPl) ? null : ExPl.Trim(),
@@ -94,19 +82,51 @@ namespace Regularnik.ViewModels
                     NextReviewDate = null
                 };
 
-                _db.AddWord(w);
                 TempWords.Add(w);
 
-                WordPl = WordEn = ExPl = ExEn = string.Empty;
+                // Reset pól formularza
+                WordPl = ExPl = WordEn = ExEn = string.Empty;
             });
 
+            // Komenda zapisująca kurs i słowa do bazy
             SaveCourseCommand = new RelayCommand(_ =>
             {
-                if (_tempCourseId == -1)
+                if (TempWords.Count == 0)
                 {
                     MessageBox.Show("Dodaj przynajmniej jedno słowo.", "Uwaga", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
+
+                // 1) utwórz kurs w bazie
+                var trimmedName = CourseName.Trim();
+                int newCourseId = _db.AddCourse(trimmedName);
+
+                // 2) przypisz CourseId i zapisz każde słowo
+                foreach (var w in TempWords)
+                {
+                    w.CourseId = newCourseId;
+                    _db.AddWord(w);
+                }
+
+                // 3) wykonaj callback nawigacji
+                _onSaved?.Invoke();
+            });
+
+            // Komenda anulująca i czyszcząca dane
+            BackCommand = new RelayCommand(_ =>
+            {
+                // Wyczyść słowa z pamięci
+                TempWords.Clear();
+
+                // Wyczyść pola formularza
+                CourseName = WordPl = WordEn = ExPl = ExEn = string.Empty;
+                OnPropertyChanged(nameof(CourseName));
+                OnPropertyChanged(nameof(WordPl));
+                OnPropertyChanged(nameof(WordEn));
+                OnPropertyChanged(nameof(ExPl));
+                OnPropertyChanged(nameof(ExEn));
+
+                // Wróć do poprzedniego widoku (np. _onSaved używane do nawigacji)
                 _onSaved?.Invoke();
             });
         }
