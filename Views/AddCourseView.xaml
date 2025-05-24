@@ -38,7 +38,7 @@
             </StackPanel>
         </StackPanel>
 
-        <!-- PRAWY PANEL: lista słówek -->
+        <!-- PRAWY PANEL: lista słówek z kafelkami 75/25 -->
         <ScrollViewer Grid.Column="1" Margin="50,0,0,0" Padding="0,0,0,80" VerticalScrollBarVisibility="Auto">
             <ItemsControl ItemsSource="{Binding TempWords}">
                 <ItemsControl.ItemsPanel>
@@ -48,18 +48,67 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel>
-                            <Button Command="{Binding DataContext.SelectWordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                    CommandParameter="{Binding}"
-                                    Style="{DynamicResource TileButtonStyle}" Margin="10" Padding="10,6" MinWidth="400" MaxWidth="420">
+                        <!-- Jeden kafelek z dwiema częsciami -->
+                        <Grid Margin="10" MinHeight="60" Width="400">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="3*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- LEWA CZĘŚĆ: niebieska, zaokrąglona po lewej -->
+                            <Border Grid.Column="0"
+                                    Background="#4E8AB9"
+                                    CornerRadius="10,0,0,10"
+                                    Padding="10,15">
                                 <StackPanel>
-                                    <TextBlock Text="{Binding WordPl}" TextWrapping="Wrap" TextAlignment="Center" Foreground="#1E2A38" FontWeight="Bold" Margin="0,0,0,2"/>
-                                    <TextBlock Text="{Binding WordEn}" TextWrapping="Wrap" TextAlignment="Center" Foreground="#1E2A38" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding WordPl}"
+                                               TextWrapping="Wrap"
+                                               TextAlignment="Center"
+                                               Foreground="#1E2A38"
+                                               FontWeight="Bold"
+                                               Margin="0,0,0,2"/>
+                                    <TextBlock Text="{Binding WordEn}"
+                                               TextWrapping="Wrap"
+                                               TextAlignment="Center"
+                                               Foreground="#1E2A38"
+                                               FontWeight="Bold"/>
                                 </StackPanel>
-                            </Button>
-                            <Button Content="🗑 Usuń" Command="{Binding DataContext.DeleteWordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                    CommandParameter="{Binding}" Style="{DynamicResource RoundButtonStyle}" Margin="0,5,0,15"/>
-                        </StackPanel>
+                            </Border>
+
+                            <!-- PRAWA CZĘŚĆ: czerwona, zaokrąglona po prawej -->
+                            <Border Grid.Column="1"
+                                CornerRadius="0,10,10,0"
+                                Padding="10,2">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="#B22222"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#E06E6E"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <Button Content="🗑 Usuń"
+                                        Command="{Binding DataContext.DeleteWordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        FontWeight="Bold">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource RoundButtonStyle}">
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#E06E6E"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Border>
+                        </Grid>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>

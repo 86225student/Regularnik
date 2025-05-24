@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data;
 using System.Data.SQLite;
 using System.Linq;
-//using Microsoft.Data.Sqlite;
 using Regularnik.Models;
 
 namespace Regularnik.Services
@@ -43,8 +43,7 @@ namespace Regularnik.Services
                 _connection);
             cmd.Parameters.AddWithValue("@n", name);
             object result = cmd.ExecuteScalar();
-            int count = Convert.ToInt32(result);
-            return count > 0;
+            return Convert.ToInt32(result) > 0;
         }
 
         /* ---------- dodaj kurs, zwróć jego nowe ID ---------- */
@@ -62,8 +61,12 @@ namespace Regularnik.Services
         public IEnumerable<Word> GetWords(int courseId)
         {
             var cmd = new SQLiteCommand(
-                "SELECT id, word_pl, word_en, example_pl, example_en, correct_count, category, next_review_date " +
-                "FROM words WHERE course_id = @cid",
+                @"SELECT 
+                    id, word_pl, word_en, example_pl, example_en,
+                    correct_count, category, next_review_date
+                  FROM words
+                  WHERE course_id = @cid
+                  ORDER BY id",
                 _connection);
             cmd.Parameters.AddWithValue("@cid", courseId);
 
@@ -89,23 +92,27 @@ namespace Regularnik.Services
             }
         }
 
-        /* ---------- dodaj słowo ---------- */
+        /* ---------- dodaj słowo i przypisz jego ID ---------- */
         public void AddWord(Word w)
         {
             var cmd = new SQLiteCommand(
                 @"INSERT INTO words
                     (course_id, word_pl, word_en, example_pl, example_en, category, correct_count, next_review_date)
                   VALUES
-                    (@cid, @pl, @en, @expl, @exen, @cat, @cc, NULL)",
+                    (@cid, @pl, @en, @expl, @exen, @cat, @cc, NULL);
+                  SELECT last_insert_rowid();",
                 _connection);
             cmd.Parameters.AddWithValue("@cid", w.CourseId);
             cmd.Parameters.AddWithValue("@pl", w.WordPl);
             cmd.Parameters.AddWithValue("@en", w.WordEn);
             cmd.Parameters.AddWithValue("@expl", string.IsNullOrWhiteSpace(w.ExamplePl) ? (object)DBNull.Value : w.ExamplePl);
             cmd.Parameters.AddWithValue("@exen", string.IsNullOrWhiteSpace(w.ExampleEn) ? (object)DBNull.Value : w.ExampleEn);
-            cmd.Parameters.AddWithValue("@cat", "NOWE");
-            cmd.Parameters.AddWithValue("@cc", 0);
-            cmd.ExecuteNonQuery();
+            cmd.Parameters.AddWithValue("@cat", w.Category);
+            cmd.Parameters.AddWithValue("@cc", w.CorrectCount);
+
+            // Pobierz nowo wstawione ID i przypisz
+            var scalar = cmd.ExecuteScalar();
+            w.Id = Convert.ToInt32(scalar);
         }
 
         // 1) Aktualizacja nazwy kursu
@@ -126,6 +133,8 @@ namespace Regularnik.Services
             cmd.Parameters.AddWithValue("@id", wordId);
             cmd.ExecuteNonQuery();
         }
+
+        // 3) Usuń wszystkie słowa z kursu poza keepIds
         public void DeleteWordsNotInCourse(int courseId, List<int> keepIds)
         {
             string sql;
@@ -138,16 +147,17 @@ namespace Regularnik.Services
             cmd.Parameters.AddWithValue("@cid", courseId);
             cmd.ExecuteNonQuery();
         }
-        // 3) Aktualizacja słowa
+
+        // 4) Aktualizacja słowa
         public void UpdateWord(Word w)
         {
             var cmd = new SQLiteCommand(@"
         UPDATE words 
-           SET word_pl = @pl,
-               word_en = @en,
-               example_pl = @expl,
-               example_en = @exen
-         WHERE id = @id", _connection);
+           SET word_pl     = @pl,
+               word_en     = @en,
+               example_pl  = @expl,
+               example_en  = @exen
+         WHERE id          = @id", _connection);
             cmd.Parameters.AddWithValue("@pl", w.WordPl);
             cmd.Parameters.AddWithValue("@en", w.WordEn);
             cmd.Parameters.AddWithValue("@expl", (object)w.ExamplePl ?? DBNull.Value);
@@ -155,15 +165,15 @@ namespace Regularnik.Services
             cmd.Parameters.AddWithValue("@id", w.Id);
             cmd.ExecuteNonQuery();
         }
+
         public IEnumerable<StatsEntry> GetStats(int courseId, DateTime start, DateTime end)
         {
             var list = new List<StatsEntry>();
             using (var con = new SQLiteConnection("Data Source=Data/app.db;Version=3;"))
             {
                 con.Open();
-
                 var cmd = new SQLiteCommand(@"
-            SELECT 
+            SELECT
                 wpl.practice_date AS date,
                 COUNT(*) AS total,
                 SUM(CASE WHEN w.correct_count > 0 THEN 1 ELSE 0 END) AS correct
@@ -173,11 +183,9 @@ namespace Regularnik.Services
               AND wpl.practice_date BETWEEN @start AND @end
             GROUP BY wpl.practice_date
             ORDER BY wpl.practice_date", con);
-
                 cmd.Parameters.AddWithValue("@cid", courseId);
                 cmd.Parameters.AddWithValue("@start", start.ToString("yyyy-MM-dd"));
                 cmd.Parameters.AddWithValue("@end", end.ToString("yyyy-MM-dd"));
-
                 using var reader = cmd.ExecuteReader();
                 while (reader.Read())
                 {
@@ -191,7 +199,5 @@ namespace Regularnik.Services
             }
             return list;
         }
-
-
     }
 }

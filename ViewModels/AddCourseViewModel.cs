@@ -53,6 +53,7 @@ namespace Regularnik.ViewModels
             _isEditMode = true;
             _editingCourseId = courseToEdit.Id;
             CourseName = courseToEdit.Name;
+
             foreach (var w in existingWords)
                 TempWords.Add(w);
         }
@@ -63,18 +64,20 @@ namespace Regularnik.ViewModels
             {
                 if (string.IsNullOrWhiteSpace(CourseName))
                 {
-                    MessageBox.Show("Musisz podać nazwę kursu.", "Uwaga", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Musisz podać nazwę kursu.", "Uwaga",
+                                    MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
                 if (string.IsNullOrWhiteSpace(WordPl) || string.IsNullOrWhiteSpace(WordEn))
                 {
-                    MessageBox.Show("Podaj słowo po polsku i angielsku.", "Uwaga", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Podaj słowo po polsku i angielsku.", "Uwaga",
+                                    MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
                 var w = new Word
                 {
-                    Id = _isEditMode ? 0 : 0, // nowe słowo ma Id=0
+                    // Id pozostaje 0 przy nowym słowie – baza nada przy zapisie
                     WordPl = WordPl.Trim(),
                     WordEn = WordEn.Trim(),
                     ExamplePl = string.IsNullOrWhiteSpace(ExPl) ? null : ExPl.Trim(),
@@ -84,6 +87,7 @@ namespace Regularnik.ViewModels
                     NextReviewDate = null,
                     CourseId = _isEditMode ? _editingCourseId : 0
                 };
+
                 TempWords.Add(w);
                 ResetEntryFields();
             });
@@ -92,15 +96,17 @@ namespace Regularnik.ViewModels
             {
                 if (string.IsNullOrWhiteSpace(CourseName) || TempWords.Count == 0)
                 {
-                    MessageBox.Show("Uzupełnij nazwę i dodaj przynajmniej jedno słowo.", "Uwaga", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Uzupełnij nazwę i dodaj przynajmniej jedno słowo.", "Uwaga",
+                                    MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
                 if (_isEditMode)
                 {
-                    // Aktualizacja kursu
+                    // 1) Zaktualizuj nazwę kursu
                     _db.UpdateCourseName(_editingCourseId, CourseName.Trim());
-                    // Dodaj/edytuj słowa
+
+                    // 2) Dodaj nowe i edytuj istniejące słowa
                     foreach (var w in TempWords)
                     {
                         if (w.Id == 0)
@@ -113,13 +119,17 @@ namespace Regularnik.ViewModels
                             _db.UpdateWord(w);
                         }
                     }
-                    // Usuń słowa, które zostały usunięte w TempWords
-                    var keep = TempWords.Where(w => w.Id > 0).Select(w => w.Id).ToList();
-                    _db.DeleteWordsNotInCourse(_editingCourseId, keep);
+
+                    // 3) Usuń słowa usunięte w UI
+                    var keepIds = TempWords
+                                  .Where(w => w.Id > 0)
+                                  .Select(w => w.Id)
+                                  .ToList();
+                    _db.DeleteWordsNotInCourse(_editingCourseId, keepIds);
                 }
                 else
                 {
-                    // Tworzenie nowego kursu
+                    // Nowy kurs
                     int newCourseId = _db.AddCourse(CourseName.Trim());
                     foreach (var w in TempWords)
                     {
@@ -133,13 +143,44 @@ namespace Regularnik.ViewModels
 
             BackCommand = new RelayCommand(_ =>
             {
-                TempWords.Clear();
-                CourseName = WordPl = WordEn = ExPl = ExEn = string.Empty;
-                OnPropertyChanged(nameof(CourseName));
-                OnPropertyChanged(nameof(WordPl));
-                OnPropertyChanged(nameof(WordEn));
-                OnPropertyChanged(nameof(ExPl));
-                OnPropertyChanged(nameof(ExEn));
+                if (_isEditMode)
+                {
+                    // W trybie edycji: zachowaj zmiany tak jak SaveCourseCommand
+                    // (bez komunikatów o walidacji)
+                    _db.UpdateCourseName(_editingCourseId, CourseName.Trim());
+
+                    foreach (var w in TempWords)
+                    {
+                        if (w.Id == 0)
+                        {
+                            w.CourseId = _editingCourseId;
+                            _db.AddWord(w);
+                        }
+                        else
+                        {
+                            _db.UpdateWord(w);
+                        }
+                    }
+
+                    var keepIds = TempWords
+                                  .Where(w => w.Id > 0)
+                                  .Select(w => w.Id)
+                                  .ToList();
+                    _db.DeleteWordsNotInCourse(_editingCourseId, keepIds);
+                }
+                else
+                {
+                    // W trybie tworzenia: anuluj, wyczyść
+                    TempWords.Clear();
+                    CourseName = WordPl = WordEn = ExPl = ExEn = string.Empty;
+                    OnPropertyChanged(nameof(CourseName));
+                    OnPropertyChanged(nameof(WordPl));
+                    OnPropertyChanged(nameof(WordEn));
+                    OnPropertyChanged(nameof(ExPl));
+                    OnPropertyChanged(nameof(ExEn));
+                }
+
+                // W obu przypadkach: wróć
                 _onSaved?.Invoke();
             });
 
@@ -157,8 +198,7 @@ namespace Regularnik.ViewModels
 
             DeleteWordCommand = new RelayCommand(param =>
             {
-                var w = param as Word;
-                if (w != null)
+                if (param is Word w)
                     TempWords.Remove(w);
             });
         }
@@ -173,7 +213,7 @@ namespace Regularnik.ViewModels
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
-        private void OnPropertyChanged([CallerMemberName] string p = null)
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(p));
+        private void OnPropertyChanged([CallerMemberName] string p = null) =>
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(p));
     }
 }

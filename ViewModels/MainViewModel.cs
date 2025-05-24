@@ -116,7 +116,6 @@ namespace Regularnik.ViewModels
         {
             _viewStack.Push(CurrentView);
 
-            // Wczytaj słówka do listy, przekaż callback do edycji
             CurrentView = new CourseWordsView
             {
                 DataContext = new CourseWordsViewModel(
@@ -150,29 +149,46 @@ namespace Regularnik.ViewModels
             };
         }
 
-        /* ---------- CALLBACK EDYCJI KURSU (NOWA METODA) ---------- */
+        /* ---------- CALLBACK EDYCJI KURSU ---------- */
         private void OnCourseEdit(Course courseToEdit)
         {
             _viewStack.Push(CurrentView);
 
-            // Wczytaj istniejące słówka z bazy
             var existingWords = _dbService.GetWords(courseToEdit.Id).ToList();
 
-            // Przejdź do widoku edycji, przekazując kurs i słowa
             CurrentView = new AddCourseView
             {
                 DataContext = new AddCourseViewModel(
                     _dbService,
-                    OnCourseSaved,
+                    OnCourseEditSaved,     // <-- tu używamy nowego callbacka
                     courseToEdit,
                     existingWords)
             };
         }
 
-        /* ---------- PO ZAPISIE KURSU ---------- */
+        /* ---------- PO ZAPISIE EDYCJI KURSU ---------- */
+        private void OnCourseEditSaved()
+        {
+            // Czyścimy historię, żeby wrócić od razu do katalogu
+            _viewStack.Clear();
+
+            // Odświeżamy katalog
+            var catalogVm = new CatalogViewModel(
+                _dbService,
+                OnCourseSelected,
+                OnAddCourse);
+            catalogVm.LoadCourses();
+
+            CurrentView = new CatalogView
+            {
+                DataContext = catalogVm
+            };
+        }
+
+        /* ---------- PO ZAPISIE NOWEGO KURSU ---------- */
         private void OnCourseSaved()
         {
-            // Wróć do poprzedniego widoku (np. katalog)
+            // Wróć do poprzedniego widoku
             if (_viewStack.Count > 0)
                 CurrentView = _viewStack.Pop();
 
