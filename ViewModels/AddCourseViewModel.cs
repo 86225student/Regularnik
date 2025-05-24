@@ -19,65 +19,109 @@ namespace Regularnik.ViewModels
         private readonly int _editingCourseId;
         private Word _selectedWord;
 
-        public string CourseName { get; set; }
-        public string WordPl { get; set; }
-        public string WordEn { get; set; }
-        public string ExPl { get; set; }
-        public string ExEn { get; set; }
+        // Kurs
+        private string _courseName;
+        public string CourseName
+        {
+            get => _courseName;
+            set { _courseName = value; OnPropertyChanged(); }
+        }
+
+        // Pola formularza
+        private string _wordPl;
+        public string WordPl
+        {
+            get => _wordPl;
+            set { _wordPl = value; OnPropertyChanged(); }
+        }
+
+        private string _wordEn;
+        public string WordEn
+        {
+            get => _wordEn;
+            set { _wordEn = value; OnPropertyChanged(); }
+        }
+
+        private string _exPl;
+        public string ExPl
+        {
+            get => _exPl;
+            set { _exPl = value; OnPropertyChanged(); }
+        }
+
+        private string _exEn;
+        public string ExEn
+        {
+            get => _exEn;
+            set { _exEn = value; OnPropertyChanged(); }
+        }
 
         public ObservableCollection<Word> TempWords { get; } = new ObservableCollection<Word>();
 
-        public ICommand AddWordCommand { get; private set; }
-        public ICommand SaveCourseCommand { get; private set; }
-        public ICommand BackCommand { get; private set; }
-        public ICommand DeleteWordCommand { get; private set; }
-        public ICommand SelectWordCommand { get; private set; }
+        public ICommand AddWordCommand { get; }
+        public ICommand SaveCourseCommand { get; }
+        public ICommand BackCommand { get; }
+        public ICommand DeleteWordCommand { get; }
+        public ICommand SelectWordCommand { get; }
 
-        // Konstruktor do tworzenia nowego kursu
+        // Nowy kurs
         public AddCourseViewModel(DatabaseService db, Action onSaved)
         {
             _db = db;
             _onSaved = onSaved;
             _isEditMode = false;
 
-            InitializeCommands();
+            AddWordCommand = new RelayCommand(_ => AddOrUpdateWord());
+            SaveCourseCommand = new RelayCommand(_ => SaveCourse());
+            BackCommand = new RelayCommand(_ => { if (_isEditMode) SaveCourse(); else CancelNew(); _onSaved(); });
+            DeleteWordCommand = new RelayCommand(p => { if (p is Word w) TempWords.Remove(w); });
+            SelectWordCommand = new RelayCommand(p => SelectWord(p as Word));
         }
 
-        // Konstruktor do edycji istniejącego kursu
-        public AddCourseViewModel(DatabaseService db,
-                                  Action onSaved,
-                                  Course courseToEdit,
-                                  IEnumerable<Word> existingWords)
+        // Edycja kursu
+        public AddCourseViewModel(DatabaseService db, Action onSaved, Course toEdit, IEnumerable<Word> existing)
             : this(db, onSaved)
         {
             _isEditMode = true;
-            _editingCourseId = courseToEdit.Id;
-            CourseName = courseToEdit.Name;
-
-            foreach (var w in existingWords)
+            _editingCourseId = toEdit.Id;
+            CourseName = toEdit.Name;
+            foreach (var w in existing)
                 TempWords.Add(w);
         }
 
-        private void InitializeCommands()
+        private void AddOrUpdateWord()
         {
-            AddWordCommand = new RelayCommand(_ =>
+            if (string.IsNullOrWhiteSpace(CourseName))
             {
-                if (string.IsNullOrWhiteSpace(CourseName))
-                {
-                    MessageBox.Show("Musisz podać nazwę kursu.", "Uwaga",
-                                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-                if (string.IsNullOrWhiteSpace(WordPl) || string.IsNullOrWhiteSpace(WordEn))
-                {
-                    MessageBox.Show("Podaj słowo po polsku i angielsku.", "Uwaga",
-                                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
+                MessageBox.Show("Musisz podać nazwę kursu.", "Uwaga", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(WordPl) || string.IsNullOrWhiteSpace(WordEn))
+            {
+                MessageBox.Show("Podaj słowo po polsku i angielsku.", "Uwaga", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
+            if (_selectedWord != null)
+            {
+                // **AKTUALIZUJ istniejące**
+                int idx = TempWords.IndexOf(_selectedWord);
+                _selectedWord.WordPl = WordPl.Trim();
+                _selectedWord.WordEn = WordEn.Trim();
+                _selectedWord.ExamplePl = string.IsNullOrWhiteSpace(ExPl) ? null : ExPl.Trim();
+                _selectedWord.ExampleEn = string.IsNullOrWhiteSpace(ExEn) ? null : ExEn.Trim();
+
+                // wymuś odświeżenie kolekcji:
+                TempWords.RemoveAt(idx);
+                TempWords.Insert(idx, _selectedWord);
+
+                _selectedWord = null;
+            }
+            else
+            {
+                // **DODAJ nowe**
                 var w = new Word
                 {
-                    // Id pozostaje 0 przy nowym słowie – baza nada przy zapisie
                     WordPl = WordPl.Trim(),
                     WordEn = WordEn.Trim(),
                     ExamplePl = string.IsNullOrWhiteSpace(ExPl) ? null : ExPl.Trim(),
@@ -87,133 +131,75 @@ namespace Regularnik.ViewModels
                     NextReviewDate = null,
                     CourseId = _isEditMode ? _editingCourseId : 0
                 };
-
                 TempWords.Add(w);
-                ResetEntryFields();
-            });
+            }
 
-            SaveCourseCommand = new RelayCommand(_ =>
+            ResetEntryFields();
+        }
+
+        private void SelectWord(Word w)
+        {
+            if (w == null) return;
+            _selectedWord = w;
+            WordPl = w.WordPl;
+            WordEn = w.WordEn;
+            ExPl = w.ExamplePl;
+            ExEn = w.ExampleEn;
+        }
+
+        private void SaveCourse()
+        {
+            if (string.IsNullOrWhiteSpace(CourseName) || TempWords.Count == 0)
             {
-                if (string.IsNullOrWhiteSpace(CourseName) || TempWords.Count == 0)
-                {
-                    MessageBox.Show("Uzupełnij nazwę i dodaj przynajmniej jedno słowo.", "Uwaga",
-                                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
+                MessageBox.Show("Uzupełnij nazwę i dodaj przynajmniej jedno słowo.", "Uwaga",
+                                MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
-                if (_isEditMode)
+            if (_isEditMode)
+            {
+                _db.UpdateCourseName(_editingCourseId, CourseName.Trim());
+                foreach (var w in TempWords)
                 {
-                    // 1) Zaktualizuj nazwę kursu
-                    _db.UpdateCourseName(_editingCourseId, CourseName.Trim());
-
-                    // 2) Dodaj nowe i edytuj istniejące słowa
-                    foreach (var w in TempWords)
+                    if (w.Id == 0)
                     {
-                        if (w.Id == 0)
-                        {
-                            w.CourseId = _editingCourseId;
-                            _db.AddWord(w);
-                        }
-                        else
-                        {
-                            _db.UpdateWord(w);
-                        }
-                    }
-
-                    // 3) Usuń słowa usunięte w UI
-                    var keepIds = TempWords
-                                  .Where(w => w.Id > 0)
-                                  .Select(w => w.Id)
-                                  .ToList();
-                    _db.DeleteWordsNotInCourse(_editingCourseId, keepIds);
-                }
-                else
-                {
-                    // Nowy kurs
-                    int newCourseId = _db.AddCourse(CourseName.Trim());
-                    foreach (var w in TempWords)
-                    {
-                        w.CourseId = newCourseId;
+                        w.CourseId = _editingCourseId;
                         _db.AddWord(w);
                     }
-                }
-
-                _onSaved?.Invoke();
-            });
-
-            BackCommand = new RelayCommand(_ =>
-            {
-                if (_isEditMode)
-                {
-                    // W trybie edycji: zachowaj zmiany tak jak SaveCourseCommand
-                    // (bez komunikatów o walidacji)
-                    _db.UpdateCourseName(_editingCourseId, CourseName.Trim());
-
-                    foreach (var w in TempWords)
+                    else
                     {
-                        if (w.Id == 0)
-                        {
-                            w.CourseId = _editingCourseId;
-                            _db.AddWord(w);
-                        }
-                        else
-                        {
-                            _db.UpdateWord(w);
-                        }
+                        _db.UpdateWord(w);
                     }
-
-                    var keepIds = TempWords
-                                  .Where(w => w.Id > 0)
-                                  .Select(w => w.Id)
-                                  .ToList();
-                    _db.DeleteWordsNotInCourse(_editingCourseId, keepIds);
                 }
-                else
-                {
-                    // W trybie tworzenia: anuluj, wyczyść
-                    TempWords.Clear();
-                    CourseName = WordPl = WordEn = ExPl = ExEn = string.Empty;
-                    OnPropertyChanged(nameof(CourseName));
-                    OnPropertyChanged(nameof(WordPl));
-                    OnPropertyChanged(nameof(WordEn));
-                    OnPropertyChanged(nameof(ExPl));
-                    OnPropertyChanged(nameof(ExEn));
-                }
-
-                // W obu przypadkach: wróć
-                _onSaved?.Invoke();
-            });
-
-            SelectWordCommand = new RelayCommand(param =>
+                var keep = TempWords.Where(x => x.Id > 0).Select(x => x.Id).ToList();
+                _db.DeleteWordsNotInCourse(_editingCourseId, keep);
+            }
+            else
             {
-                _selectedWord = param as Word;
-                if (_selectedWord != null)
+                int newId = _db.AddCourse(CourseName.Trim());
+                foreach (var w in TempWords)
                 {
-                    WordPl = _selectedWord.WordPl;
-                    WordEn = _selectedWord.WordEn;
-                    ExPl = _selectedWord.ExamplePl;
-                    ExEn = _selectedWord.ExampleEn;
+                    w.CourseId = newId;
+                    _db.AddWord(w);
                 }
-            });
+            }
 
-            DeleteWordCommand = new RelayCommand(param =>
-            {
-                if (param is Word w)
-                    TempWords.Remove(w);
-            });
+            _onSaved();
+        }
+
+        private void CancelNew()
+        {
+            TempWords.Clear();
+            CourseName = WordPl = WordEn = ExPl = ExEn = string.Empty;
         }
 
         private void ResetEntryFields()
         {
-            WordPl = ExPl = WordEn = ExEn = string.Empty;
-            OnPropertyChanged(nameof(WordPl));
-            OnPropertyChanged(nameof(ExPl));
-            OnPropertyChanged(nameof(WordEn));
-            OnPropertyChanged(nameof(ExEn));
+            WordPl = WordEn = ExPl = ExEn = string.Empty;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
-        private void OnPropertyChanged([CallerMemberName] string p = null) =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(p));
+        private void OnPropertyChanged([CallerMemberName] string n = null)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
     }
 }
