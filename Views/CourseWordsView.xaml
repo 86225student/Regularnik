@@ -26,6 +26,7 @@
             <Button Content="✏️ Edytuj kurs"
               Style="{DynamicResource RoundButtonStyle}"
               Command="{Binding EditCourseCommand}"
+              Visibility="{Binding CanModify, Converter={StaticResource BoolToVis}}"
               FontWeight="Bold"
               HorizontalAlignment="Center"
               Margin="0,10,0,0"/>
@@ -33,6 +34,7 @@
             <!-- Usuń kurs pod Edit -->
             <Button Content="🗑 Usuń kurs"
         Command="{Binding DeleteCourseCommand}"
+        Visibility="{Binding CanModify, Converter={StaticResource BoolToVis}}"
         HorizontalAlignment="Center"
         Margin="0,10,0,0"
         FontWeight="Bold">

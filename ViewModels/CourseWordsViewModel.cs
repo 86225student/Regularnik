@@ -10,22 +10,31 @@ namespace Regularnik.ViewModels
 {
     public class CourseWordsViewModel
     {
-        // Nagłówek widoku, np. "Kurs: Angielski"
+        // Nazwa kursu, np. "Kurs: Angielski"
         public string Header { get; }
+
+        // Kolekcja słówek wyświetlana w widoku
+        public ObservableCollection<Word> Words { get; } = new ObservableCollection<Word>();
 
         // Komendy
         public ICommand EditCourseCommand { get; private set; }
         public ICommand DeleteCourseCommand { get; private set; }
 
-        // Kolekcja słówek
-        public ObservableCollection<Word> Words { get; } = new ObservableCollection<Word>();
+        // Czy edycja i usuwanie są dozwolone?
+        public bool CanModify => !_protectedNames.Contains(_course.Name);
 
+        // Lista nazw chronionych przed edycją/usunięciem
+        private static readonly string[] _protectedNames = { "A1", "A2", "B1", "B2" };
+
+        // Prywatne pola
         private readonly Course _course;
         private readonly Action<Course> _onEdit;
         private readonly Action _onDelete;
         private readonly DatabaseService _db;
 
-        // Konstruktor główny
+        /// <summary>
+        /// Główny konstruktor: przygotowuje listę słówek i komendy.
+        /// </summary>
         public CourseWordsViewModel(
             DatabaseService db,
             Course course,
@@ -39,35 +48,44 @@ namespace Regularnik.ViewModels
 
             Header = $"Kurs: {_course.Name}";
 
-            // Załaduj słowa
+            // Załaduj słówka z bazy
             foreach (var w in _db.GetWords(_course.Id))
                 Words.Add(w);
 
-            // Edycja
-            EditCourseCommand = new RelayCommand(_ => _onEdit(_course));
+            // Edycja kursu
+            EditCourseCommand = new RelayCommand(
+                _ => _onEdit(_course),
+                _ => CanModify
+            );
 
-            // Usunięcie kursu
-            DeleteCourseCommand = new RelayCommand(_ =>
-            {
-                var result = MessageBox.Show(
-                    $"Na pewno chcesz usunąć kurs „{_course.Name}” i wszystkie jego słowa?",
-                    "Potwierdź usunięcie",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Warning);
-
-                if (result == MessageBoxResult.Yes)
+            // Usuwanie kursu
+            DeleteCourseCommand = new RelayCommand(
+                _ =>
                 {
-                    // 1) Usuń słowa
-                    _db.DeleteWordsNotInCourse(_course.Id, new System.Collections.Generic.List<int>());
-                    // 2) Usuń sam kurs
-                    _db.DeleteCourse(_course.Id);
-                    // 3) Wracamy i odświeżamy
-                    _onDelete();
-                }
-            });
+                    var result = MessageBox.Show(
+                        $"Na pewno usunąć kurs „{_course.Name}” i wszystkie jego słowa?",
+                        "Potwierdź usunięcie",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Warning);
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        // 1) Usuń wszystkie słowa tego kursu
+                        _db.DeleteWordsNotInCourse(_course.Id, new System.Collections.Generic.List<int>());
+                        // 2) Usuń sam kurs
+                        _db.DeleteCourse(_course.Id);
+                        // 3) Cofnij widok i odśwież listę
+                        _onDelete();
+                    }
+                },
+                _ => CanModify
+            );
         }
 
-        // Zachowujemy kompatybilność z dotychczasowym wywołaniem
+        /// <summary>
+        /// Przeciążenie dla zachowania kompatybilności:
+        /// jeśli nie podano onEdit/onDelete, przyciski po prostu nic nie robią.
+        /// </summary>
         public CourseWordsViewModel(DatabaseService db, Course course)
             : this(db, course, _ => { }, () => { })
         {
