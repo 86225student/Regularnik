@@ -3,141 +3,189 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:conv="clr-namespace:Regularnik.Converters">
 
-    <!-- ==== ZASOBY LOKALNE ==== -->
+    <!--RESOURCES-->
     <UserControl.Resources>
         <conv:EnumToVisibilityConverter x:Key="EnumToVisibility"/>
 
-        <!-- mały wariant kafelka – oparty na globalnym TileButtonStyle -->
-        <Style x:Key="Tile" TargetType="Button" BasedOn="{StaticResource TileButtonStyle}">
-            <Setter Property="Width" Value="150"/>
+        <!-- kompaktowy kafelek – 160 px szer. -->
+        <Style x:Key="Tile160" TargetType="Button" BasedOn="{StaticResource TileButtonStyle}">
+            <Setter Property="Width" Value="160"/>
+            <Setter Property="Margin" Value="0,0,20,0"/>
+        </Style>
+
+        <!-- szeroki kafelek – 220 px (domyślny TileButtonStyle) -->
+        <Style x:Key="Tile220" TargetType="Button" BasedOn="{StaticResource TileButtonStyle}">
+            <Setter Property="Width" Value="220"/>
         </Style>
     </UserControl.Resources>
 
-
+    <!--LAYOUT-->
     <Grid>
+        <!-- trzy pasy: nagłówek | liczniki | treść -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-
-        <TextBlock Text="{Binding Header}"
+        <!-- ===== NAGŁÓWEK ===== -->
+        <TextBlock Grid.Row="0"
+                   Text="{Binding Header}"
                    Foreground="#FFD93D"
-                   FontSize="26"
+                   FontSize="28"
                    FontWeight="Bold"
                    HorizontalAlignment="Center"
-                   Margin="0,25"/>
+                   Margin="0,32"/>
 
+        <!-- ===== GÓRNE LICZNIKI / START LEKCJI ===== -->
+        <StackPanel Grid.Row="1"
+            Orientation="Horizontal"
+            HorizontalAlignment="Center"
+            Margin="0,0,0,40">
 
-        <StackPanel VerticalAlignment="Center"
-                    HorizontalAlignment="Center"
-                    Visibility="{Binding Stage,
-                                 Converter={StaticResource EnumToVisibility},
-                                 ConverterParameter=Menu}">
-            <StackPanel Orientation="Horizontal">
-                <Button Content="{Binding ReviewCount, StringFormat=POWTÓRKI ({0})}"
-                        Style="{StaticResource Tile}"
-                        Command="{Binding StartReviewCommand}"
-                        Margin="0,0,20,0"/>
+            <!-- POWTÓRKI -->
+            <Button Content="{Binding ReviewLabel}"
+            Style="{StaticResource Tile160}"
+            Command="{Binding StartReviewCommand}" />
 
-                <Button Content="{Binding ReinforceCount, StringFormat=UTRWAL ({0})}"
-                        Style="{StaticResource Tile}"
-                        Command="{Binding StartReinforceCommand}"
-                        Margin="0,0,20,0"/>
+            <!-- UTRWAL -->
+            <Button Content="{Binding ReinforceLabel}"
+            Style="{StaticResource Tile160}"
+            Command="{Binding StartReinforceCommand}" />
 
-                <Button Content="{Binding NewCount, StringFormat=NOWE ({0})}"
-                        Style="{StaticResource Tile}"
-                        Command="{Binding StartNewCommand}"/>
-            </StackPanel>
+            <!-- NOWE -->
+            <Button Content="{Binding NewLabel}"
+            Style="{StaticResource Tile160}"
+            Command="{Binding StartNewCommand}"
+            Margin="0" />
         </StackPanel>
 
 
-        <StackPanel VerticalAlignment="Center"
-                    HorizontalAlignment="Center"
-                    Visibility="{Binding Stage,
-                                 Converter={StaticResource EnumToVisibility},
-                                 ConverterParameter=Front}">
+
+        <!-- ===== STREFA TREŚCI ===== -->
+        <Grid Grid.Row="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <!-- karta / menu / done -->
+                <RowDefinition Height="Auto"/>
+                <!-- WIEM / … -->
+            </Grid.RowDefinitions>
 
 
-            <TextBlock Text="{Binding WordPl}"
+            <!-- ~~~~ FRONT ~~~~ -->
+            <StackPanel Grid.Row="0"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        Visibility="{Binding Stage,
+                                     Converter={StaticResource EnumToVisibility},
+                                     ConverterParameter=Front}">
+                <TextBlock Text="{Binding WordPl}"
+                           FontSize="26"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           HorizontalAlignment="Center"/>
+
+                <TextBlock Text="{Binding ExEn}"
+                           Width="460"
+                           TextWrapping="Wrap"
+                           FontSize="18"
+                           Foreground="#FFD93D"
+                           TextAlignment="Center"
+                           Margin="0,12"/>
+
+                <Button Content="Sprawdź"
+                        Style="{StaticResource RoundButtonStyle}"
+                        Command="{Binding ShowBackCommand}"
+                        Margin="0,30,0,0"/>
+            </StackPanel>
+
+            <!-- ~~~~ BACK ~~~~ -->
+            <StackPanel Grid.Row="0"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        Visibility="{Binding Stage,
+                                     Converter={StaticResource EnumToVisibility},
+                                     ConverterParameter=Back}">
+                <TextBlock Text="{Binding WordPl}"
+                           FontSize="26"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           HorizontalAlignment="Center"/>
+
+                <TextBlock Text="{Binding WordEn}"
+                           FontSize="20"
+                           Foreground="#CCCCCC"
+                           HorizontalAlignment="Center"
+                           Margin="0,6"/>
+
+                <TextBlock Text="{Binding ExEn}"
+                           Width="460"
+                           TextWrapping="Wrap"
+                           FontSize="18"
+                           Foreground="#CCCCCC"
+                           TextAlignment="Center"/>
+
+                <TextBlock Text="{Binding ExPl}"
+                           Width="460"
+                           TextWrapping="Wrap"
+                           FontSize="18"
+                           Foreground="#CCCCCC"
+                           TextAlignment="Center"
+                           Margin="0,4"
+                           Visibility="{Binding ShowPolishExample,
+                                                Converter={StaticResource BoolToVis}}"/>
+
+                <Button Content="TŁUMACZ"
+                        Style="{StaticResource Tile160}"
+                        Width="130"
+                        Command="{Binding ToggleTranslateCmd}"
+                        Margin="0,20,0,0"/>
+            </StackPanel>
+
+            <!-- ~~~~ DONE ~~~~ -->
+            <TextBlock Grid.Row="0"
+                       Text="🎉  To już wszystko na dziś!"
                        FontSize="24"
                        FontWeight="Bold"
                        Foreground="White"
-                       HorizontalAlignment="Center"/>
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Visibility="{Binding Stage,
+                                    Converter={StaticResource EnumToVisibility},
+                                    ConverterParameter=Done}"/>
 
-            <TextBlock Text="{Binding ExEn}"
-                       Width="420"
-                       TextWrapping="Wrap"
-                       FontSize="18"
-                       Foreground="#FFD93D"
-                       TextAlignment="Center"
-                       Margin="0,8"/>
-
-            <Button Content="Sprawdź"
-                    Style="{StaticResource RoundButtonStyle}"
-                    Command="{Binding ShowBackCommand}"
-                    Margin="0,25,0,0"/>
-        </StackPanel>
-
-
-        <StackPanel VerticalAlignment="Center"
+        <!-- ==== WIEM / PRAWIE / NIE WIEM ==== -->
+            <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
                     HorizontalAlignment="Center"
+                    VerticalAlignment="Bottom"
+                    Margin="0,0,0,120"  
                     Visibility="{Binding Stage,
                                  Converter={StaticResource EnumToVisibility},
                                  ConverterParameter=Back}">
 
-            <TextBlock Text="{Binding WordPl}"
-                       FontSize="24"
-                       FontWeight="Bold"
-                       Foreground="White"
-                       HorizontalAlignment="Center"/>
-
-            <TextBlock Text="{Binding WordEn}"
-                       FontSize="20"
-                       Foreground="#CCCCCC"
-                       HorizontalAlignment="Center"
-                       Margin="0,6"/>
-
-            <TextBlock Text="{Binding ExEn}"
-                       Width="420"
-                       TextWrapping="Wrap"
-                       FontSize="18"
-                       Foreground="#CCCCCC"
-                       TextAlignment="Center"/>
-
-            <TextBlock Text="{Binding ExPl}"
-                       Width="420"
-                       TextWrapping="Wrap"
-                       FontSize="18"
-                       Foreground="#CCCCCC"
-                       TextAlignment="Center"
-                       Margin="0,2"/>
-
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Center"
-                        Margin="0,20,0,0">
                 <Button Content="WIEM"
-                        Style="{StaticResource Tile}"
-                        Command="{Binding KnowCmd}"
-                        Margin="0,0,10,0"/>
+                    Style="{StaticResource Tile160}"
+                    Command="{Binding KnowCmd}"
+                    Margin="0,0,10,0"/>
 
                 <Button Content="PRAWIE"
-                        Style="{StaticResource Tile}"
-                        Command="{Binding AlmostCmd}"
-                        Margin="0,0,10,0"/>
+                    Style="{StaticResource Tile160}"
+                    Command="{Binding AlmostCmd}"
+                    Margin="0,0,10,0">
+                    <Button.Visibility>
+                        <MultiBinding Converter="{StaticResource HideAlmostVis}">
+                            <Binding Path="ActiveCat"/>
+                            <Binding RelativeSource="{RelativeSource Self}" Path="Content"/>
+                        </MultiBinding>
+                    </Button.Visibility>
+                </Button>
 
                 <Button Content="NIE WIEM"
-                        Style="{StaticResource Tile}"
-                        Command="{Binding DontKnowCmd}"/>
+                    Style="{StaticResource Tile160}"
+                    Command="{Binding DontKnowCmd}"
+                    Margin="0"/>
             </StackPanel>
-        </StackPanel>
-
-
-        <TextBlock Text="🎉  To już wszystko na dziś!"
-                   FontSize="24"
-                   FontWeight="Bold"
-                   Foreground="White"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center"
-                   Visibility="{Binding Stage,
-                                Converter={StaticResource EnumToVisibility},
-                                ConverterParameter=Done}"/>
-
+        </Grid>
     </Grid>
 </UserControl>

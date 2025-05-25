@@ -74,9 +74,12 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Converters\AnswerToCommandConverter.cs" />
     <Compile Include="Converters\BoolToEditHeaderConverter.cs" />
     <Compile Include="Converters\BoolToVisibilityConverter.cs" />
     <Compile Include="Converters\EnumToVisibilityConverter.cs" />
+    <Compile Include="Converters\HideAlmostConverter.cs" />
+    <Compile Include="Converters\InvBoolToVisibilityConverter.cs" />
     <Compile Include="Converters\InverseBooleanToVisibilityConverter.cs" />
     <Compile Include="Models\Category.cs" />
     <Compile Include="Models\Course.cs" />

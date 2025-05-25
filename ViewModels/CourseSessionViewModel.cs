@@ -13,12 +13,26 @@ namespace Regularnik.ViewModels
 
     public class CourseSessionViewModel : ObservableObject
     {
-        // ===== public, do bindowania =====
-        public string Header { get; }
-        public string WordPl => _current?.WordPl;
-        public string WordEn => _current?.WordEn;
-        public string ExPl => _current?.ExamplePl;
-        public string ExEn => _current?.ExampleEn;
+        /* ===== POLA I DI ===== */
+        private readonly DatabaseService _db;
+        private readonly Course _course;
+        private readonly DateTime _today = DateTime.Today;
+
+        private readonly Queue<Word> _queue = new();
+        private Word _current;
+
+        private Category _activeCat;
+        private CardStage _stage = CardStage.Menu;
+        private bool _showPl;
+
+        /* ====== WŁASNOŚCI ====== */
+        public string Header => $"Kurs – {_course.Name}";
+
+        public Category ActiveCat
+        {
+            get => _activeCat;
+            private set { _activeCat = value; OnPropertyChanged(); }
+        }
 
         public CardStage Stage
         {
@@ -26,70 +40,77 @@ namespace Regularnik.ViewModels
             private set { _stage = value; OnPropertyChanged(); }
         }
 
+        public bool ShowPolishExample
+        {
+            get => _showPl;
+            private set { _showPl = value; OnPropertyChanged(); }
+        }
+
+        public string WordPl => _current?.WordPl;
+        public string WordEn => _current?.WordEn;
+        public string ExPl => _current?.ExamplePl;
+        public string ExEn => _current?.ExampleEn;
+
         public int NewCount { get; private set; }
         public int ReinforceCount { get; private set; }
         public int ReviewCount { get; private set; }
 
-        // ===== commands =====
+        public string NewLabel => $"NOWE ({NewCount})";
+        public string ReinforceLabel => $"UTRWAL ({ReinforceCount})";
+        public string ReviewLabel => $"POWTÓRKI ({ReviewCount})";
+
+        /* ===== KOMENDY ===== */
         public ICommand StartNewCommand { get; }
         public ICommand StartReinforceCommand { get; }
         public ICommand StartReviewCommand { get; }
         public ICommand ShowBackCommand { get; }
+        public ICommand ToggleTranslateCmd { get; }
         public ICommand KnowCmd { get; }
         public ICommand AlmostCmd { get; }
         public ICommand DontKnowCmd { get; }
 
-        // ===== private pola =====
-        private readonly DatabaseService _db;
-        private readonly Course _course;
-        private readonly DateTime _today = DateTime.Today;
-
-        private readonly Queue<Word> _queue = new Queue<Word>();
-        private Word _current;
-        private CardStage _stage = CardStage.Menu;
-
+        /* ===== KONSTRUKTOR ===== */
         public CourseSessionViewModel(DatabaseService db, Course course)
         {
             _db = db;
             _course = course;
-            Header = $"Kurs – {course.Name}";
-
-            RefreshCounts();
 
             StartNewCommand = new RelayCommand(_ => Load(Category.New));
             StartReinforceCommand = new RelayCommand(_ => Load(Category.Reinforce));
             StartReviewCommand = new RelayCommand(_ => Load(Category.Review));
 
-            ShowBackCommand = new RelayCommand(_ => Stage = CardStage.Back,
-                                                      _ => Stage == CardStage.Front);
+            ShowBackCommand = new RelayCommand(_ =>
+            {
+                Stage = CardStage.Back;
+                ShowPolishExample = false;
+            });
 
-            KnowCmd = new RelayCommand(_ => Commit(Answer.Know), _ => Stage == CardStage.Back);
-            AlmostCmd = new RelayCommand(_ => Commit(Answer.Almost), _ => Stage == CardStage.Back);
-            DontKnowCmd = new RelayCommand(_ => Commit(Answer.Nope), _ => Stage == CardStage.Back);
+            ToggleTranslateCmd = new RelayCommand(_ => ShowPolishExample = !ShowPolishExample);
+
+            KnowCmd = new RelayCommand(_ => Commit(Answer.Know));
+            AlmostCmd = new RelayCommand(_ => Commit(Answer.Almost));
+            DontKnowCmd = new RelayCommand(_ => Commit(Answer.Nope));
+
+            RefreshCounts();
         }
 
-        /* ---------- ładowanie kolejki ---------- */
+        /* ===== ŁADOWANIE SŁÓWEK ===== */
         private void Load(Category cat)
         {
+            ActiveCat = cat;
             _queue.Clear();
 
-            foreach (var w in _db.GetWords(_course.Id))   // istniejąca metoda, nie ruszamy DB-Service
+            foreach (var w in _db.GetWords(_course.Id))
             {
                 switch (cat)
                 {
                     case Category.New when w.CorrectCount == 0:
-                        _queue.Enqueue(w);
-                        break;
-
                     case Category.Reinforce when w.CorrectCount > 0 &&
-                                                w.NextReviewDate?.Date <= _today &&
-                                                (w.Category == "Reinforce" || w.Category == "New"):
-                        _queue.Enqueue(w);
-                        break;
-
+                           w.NextReviewDate?.Date <= _today &&
+                           (w.Category == "Reinforce" || w.Category == "New"):
                     case Category.Review when w.CorrectCount > 0 &&
-                                             w.NextReviewDate?.Date <= _today &&
-                                             w.Category == "Review":
+                           w.NextReviewDate?.Date <= _today &&
+                           w.Category == "Review":
                         _queue.Enqueue(w);
                         break;
                 }
@@ -98,7 +119,7 @@ namespace Regularnik.ViewModels
             Next();
         }
 
-        /* ---------- obsługa kart ---------- */
+        /* ===== OBSŁUGA KART ===== */
         private void Next()
         {
             if (_queue.Count == 0)
@@ -112,6 +133,7 @@ namespace Regularnik.ViewModels
 
             _current = _queue.Dequeue();
             Stage = CardStage.Front;
+            ShowPolishExample = false;
             NotifyWord();
         }
 
@@ -123,7 +145,7 @@ namespace Regularnik.ViewModels
             OnPropertyChanged(nameof(ExEn));
         }
 
-        /* ---------- odpowiedzi ---------- */
+        /* ===== ODPOWIEDZI UŻYTKOWNIKA ===== */
         private enum Answer { Know, Almost, Nope }
 
         private void Commit(Answer ans)
@@ -152,34 +174,33 @@ namespace Regularnik.ViewModels
             }
 
             SaveWord(_current);
+
+            /* ------ kluczowa linia ------ */
+            RefreshCounts();          // ← aktualizujemy liczniki NATYCHMIAST
+            /* --------------------------- */
+
             Next();
         }
 
-        /* ---------- zapis do bazy bez ruszania DatabaseService.cs ---------- */
         private void SaveWord(Word w)
         {
-            using (var con = new SQLiteConnection("Data Source=Data/app.db;Version=3;"))
-            {
-                con.Open();
+            using var con = new SQLiteConnection("Data Source=Data/app.db;Version=3;");
+            con.Open();
 
-                const string sql = @"UPDATE words
-                                     SET correct_count    = @cc,
-                                         next_review_date = @nrd,
-                                         category          = @cat
-                                     WHERE id = @id";
-
-                using (var cmd = new SQLiteCommand(sql, con))
-                {
-                    cmd.Parameters.AddWithValue("@cc", w.CorrectCount);
-                    cmd.Parameters.AddWithValue("@nrd", w.NextReviewDate?.ToString("yyyy-MM-dd"));
-                    cmd.Parameters.AddWithValue("@cat", w.Category);
-                    cmd.Parameters.AddWithValue("@id", w.Id);
-                    cmd.ExecuteNonQuery();
-                }
-            }
+            const string sql = @"UPDATE words
+                                 SET correct_count    = @cc,
+                                     next_review_date = @nrd,
+                                     category         = @cat
+                                 WHERE id = @id";
+            using var cmd = new SQLiteCommand(sql, con);
+            cmd.Parameters.AddWithValue("@cc", w.CorrectCount);
+            cmd.Parameters.AddWithValue("@nrd", w.NextReviewDate?.ToString("yyyy-MM-dd"));
+            cmd.Parameters.AddWithValue("@cat", w.Category);
+            cmd.Parameters.AddWithValue("@id", w.Id);
+            cmd.ExecuteNonQuery();
         }
 
-        /* ---------- liczniki kafelków ---------- */
+        /* ===== LICZNIKI ===== */
         private void RefreshCounts()
         {
             var words = _db.GetWords(_course.Id).ToList();
@@ -197,6 +218,9 @@ namespace Regularnik.ViewModels
             OnPropertyChanged(nameof(NewCount));
             OnPropertyChanged(nameof(ReinforceCount));
             OnPropertyChanged(nameof(ReviewCount));
+            OnPropertyChanged(nameof(NewLabel));
+            OnPropertyChanged(nameof(ReinforceLabel));
+            OnPropertyChanged(nameof(ReviewLabel));
         }
     }
 }

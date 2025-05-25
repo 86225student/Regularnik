@@ -8,9 +8,15 @@
 
         <!-- KONWERTERY -->
         <BooleanToVisibilityConverter               x:Key="BoolToVis"/>
+        <!-- InverseBooleanToVisibilityConverter masz już w Converters -->
         <conv:InverseBooleanToVisibilityConverter   x:Key="InvBoolToVis"/>
         <conv:EnumToVisibilityConverter             x:Key="EnumToVisibility"/>
         <conv:BoolToEditHeaderConverter             x:Key="BoolToEditHeaderConverter"/>
+        <conv:AnswerToCommandConverter              x:Key="AnswerToCommand"/>
+        <conv:HideAlmostConverter                   x:Key="HideAlmostVis"/>
+
+
+
 
         <!-- STYL: niebieski kafelek -->
         <Style x:Key="TileButtonStyle" TargetType="Button">
