@@ -213,12 +213,19 @@ namespace Regularnik.ViewModels
         private void GoBack()
         {
             if (_viewStack.Count > 0)
+            {
+                // Cofamy się do poprzedniego widoku
                 CurrentView = _viewStack.Pop();
+                IsMenuVisible = false;
+            }
             else
+            {
+                // Już nie ma gdzie wracać – pokazujemy menu główne
                 CurrentView = null;
-
-            IsMenuVisible = false;
+                IsMenuVisible = true;
+            }
         }
+
 
         /* ---------- ŁADOWANIE KATALOGU ---------- */
         private void LoadCourses()
