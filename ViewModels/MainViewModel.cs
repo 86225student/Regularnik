@@ -115,15 +115,24 @@ namespace Regularnik.ViewModels
         private void OnCourseSelected(Course course)
         {
             _viewStack.Push(CurrentView);
-
             CurrentView = new CourseWordsView
             {
                 DataContext = new CourseWordsViewModel(
                     _dbService,
                     course,
-                    OnCourseEdit)
+                    OnCourseEdit,      // dotychczasowy „Edytuj”
+                    OnCourseDeleted)   // nowy „Usuń”
             };
         }
+        private void OnCourseDeleted()
+        {
+            // cofa do poprzedniego widoku
+            GoBack();
+            // jeżeli teraz jesteśmy w katalogu – odśwież listę
+            if (CurrentView is CatalogView cv && cv.DataContext is CatalogViewModel vm)
+                vm.LoadCourses();
+        }
+
 
         /* ---------- OTWIERANIE WIDOKU DODAWANIA NOWEGO KURSU ---------- */
         private void OnAddCourse()

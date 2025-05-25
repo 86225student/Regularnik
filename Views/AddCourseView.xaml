@@ -35,8 +35,8 @@
 
             <StackPanel Orientation="Horizontal"
             VerticalAlignment="Top"
-            HorizontalAlignment="Left"
-            Margin="0,0,0,15">
+            HorizontalAlignment="Center"
+            Margin="0,0,0,10">
                 <Button Content="➕ Zapisz słowo"
           Command="{Binding AddWordCommand}"
           Style="{DynamicResource RoundButtonStyle}"
@@ -47,7 +47,8 @@
           Command="{Binding SaveCourseCommand}"
           Style="{DynamicResource RoundButtonStyle}"
           Width="140" Height="40"
-          FontWeight="Bold"/>
+          FontWeight="Bold"
+                        Margin="0,0,10,0"/>
             </StackPanel>
         </StackPanel>
 

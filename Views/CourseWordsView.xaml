@@ -29,6 +29,28 @@
               FontWeight="Bold"
               HorizontalAlignment="Center"
               Margin="0,10,0,0"/>
+
+            <!-- Usuń kurs pod Edit -->
+            <Button Content="🗑 Usuń kurs"
+        Command="{Binding DeleteCourseCommand}"
+        HorizontalAlignment="Center"
+        Margin="0,10,0,0"
+        FontWeight="Bold">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource RoundButtonStyle}">
+                        <!-- domyślne tło i tekst -->
+                        <Setter Property="Background" Value="#B22222"/>
+                        <!-- taki sam kolor tekstu jak w Edytuj kurs (z RoundButtonStyle) -->
+                        <Setter Property="Foreground" Value="#1E2A38"/>
+                        <Style.Triggers>
+                            <!-- najechanie myszką -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#E06E6E"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
         </StackPanel>
 
         <!-- lista słówek przewijana -->

@@ -166,6 +166,21 @@ namespace Regularnik.Services
             cmd.ExecuteNonQuery();
         }
 
+        public void DeleteCourse(int courseId)
+        {
+            // 1) Usuń wszystkie słowa z tego kursu
+            var cmdDelWords = new SQLiteCommand(
+                "DELETE FROM words WHERE course_id = @cid", _connection);
+            cmdDelWords.Parameters.AddWithValue("@cid", courseId);
+            cmdDelWords.ExecuteNonQuery();
+
+            // 2) Usuń sam kurs
+            var cmdDelCourse = new SQLiteCommand(
+                "DELETE FROM courses WHERE id = @cid", _connection);
+            cmdDelCourse.Parameters.AddWithValue("@cid", courseId);
+            cmdDelCourse.ExecuteNonQuery();
+        }
+
         public IEnumerable<StatsEntry> GetStats(int courseId, DateTime start, DateTime end)
         {
             var list = new List<StatsEntry>();
