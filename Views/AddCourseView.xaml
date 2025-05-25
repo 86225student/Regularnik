@@ -28,31 +28,43 @@
 
             <TextBlock Text="Przykład PL" Foreground="#FFD93D" FontWeight="SemiBold" Margin="0,0,0,5"/>
             <TextBox Text="{Binding ExPl, UpdateSourceTrigger=PropertyChanged}"
-                     Height="30" Padding="5" Margin="0,0,0,15"/>
+                     Height="30" Padding="5" Margin="0,0,0,15"
+                     Visibility="{Binding GenerateExample, Converter={StaticResource InvBoolToVis}}"/>
 
             <TextBlock Text="Przykład EN" Foreground="#FFD93D" FontWeight="SemiBold" Margin="0,0,0,15"/>
             <TextBox Text="{Binding ExEn, UpdateSourceTrigger=PropertyChanged}"
-                     Height="30" Padding="5" Margin="0,0,0,25"/>
+                     Height="30" Padding="5" Margin="0,0,0,25"
+                     Visibility="{Binding GenerateExample, Converter={StaticResource InvBoolToVis}}"/>
 
-            <StackPanel Orientation="Horizontal"
-            VerticalAlignment="Top"
-            HorizontalAlignment="Center"
-            Margin="0,0,0,10">
-                <Button Content="➕ Zapisz słowo"
-          Command="{Binding AddWordCommand}"
-          Style="{DynamicResource RoundButtonStyle}"
-          Width="140" Height="40"
-          FontWeight="Bold"
-          Margin="0,0,10,0"/>
-                <Button Content="💾 Zapisz kurs"
-          Command="{Binding SaveCourseCommand}"
-          Style="{DynamicResource RoundButtonStyle}"
-          Width="140" Height="40"
-          FontWeight="Bold"
-                        Margin="0,0,10,0"/>
+            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,0,0,10">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button Content="➕ Zapisz słowo"
+                            Command="{Binding AddWordCommand}"
+                            Style="{DynamicResource RoundButtonStyle}"
+                            Width="140" Height="40"
+                            FontWeight="Bold"
+                            Margin="0,0,10,0"/>
+                    <Button Content="💾 Zapisz kurs"
+                            Command="{Binding SaveCourseCommand}"
+                            Style="{DynamicResource RoundButtonStyle}"
+                            Width="140" Height="40"
+                            FontWeight="Bold"
+                            Margin="0,0,10,0"/>
+                </StackPanel>
+
+                <!-- 🔵 Checkbox poniżej -->
                 <CheckBox Content="Wygeneruj przykładowe zdanie automatycznie"
-                          IsChecked="{Binding GenerateExample}" Margin="0,10,0,0" />
-
+                          IsChecked="{Binding GenerateExample}"
+                          Margin="0,10,0,0"
+                          VerticalAlignment="Center"
+                          Foreground="#FFD93D"
+                          FontWeight="Bold"
+                          FontSize="14"
+                          Padding="5,0"
+                          Background="Transparent"
+                          BorderBrush="#FFD93D"
+                          BorderThickness="1"
+                          FocusVisualStyle="{x:Null}"/>
             </StackPanel>
         </StackPanel>
 

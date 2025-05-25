@@ -87,7 +87,7 @@
     <Compile Include="Models\StatsEntry.cs" />
     <Compile Include="Models\Word.cs" />
     <Compile Include="Services\ChatGptService.cs" />
-    <Compile Include="Services\ChatGptServiceTest.cs" />
+    <Compile Include="Services\CohereServiceTest.cs" />
     <Compile Include="Services\DatabaseService.cs" />
     <Compile Include="ViewModels\AddCourseViewModel.cs" />
     <Compile Include="ViewModels\CatalogViewModel.cs" />

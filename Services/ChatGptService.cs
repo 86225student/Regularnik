@@ -1,117 +1,81 @@
 ﻿using System;
-using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Regularnik.Services
 {
     public static class ChatGptService
     {
-        private const string ApiKey = "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"; // Twój klucz API
-        private const string Endpoint = "https://api.openai.com/v1/chat/completions";
+        private const string ApiKey = "3abZ3aKZRdH2Oon6wY4r1TiUkNJwEvvaiQ6iHASW"; // Twój klucz API Cohere
+        private const string Endpoint = "https://api.cohere.ai/v1/chat";
 
         public static async Task<(string English, string Polish)> GenerateExampleAsync(string wordEn)
         {
             using var client = new HttpClient();
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", ApiKey);
+            client.DefaultRequestHeaders.Add("Cohere-Version", "2022-12-06"); // Wymagane przez Cohere
 
-            var prompt = $"Napisz przykładowe zdanie po angielsku ze słowem '{wordEn}' i jego tłumaczenie na polski.";
+            var prompt = $"Napisz JEDNO i tylko jedno przykładowe zdanie po angielsku ze słowem '{wordEn}' oraz jego tłumaczenie na polski. Nie podawaj więcej niż jednego przykładu.";
 
             var requestBody = new
             {
-                model = "gpt-3.5-turbo",
-                messages = new[]
+                model = "command-r", // domyślny model w Cohere
+                chat_history = new[]
                 {
-                    new { role = "system", content = "Jesteś tłumaczem angielsko-polskim." },
-                    new { role = "user", content = prompt }
-                }
+                    new { user_name = "system", text = "Jesteś tłumaczem angielsko-polskim." }
+                },
+                message = prompt
             };
 
             var json = JsonSerializer.Serialize(requestBody);
-            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
-            var response = await client.PostAsync(Endpoint, content);
-
-            if ((int)response.StatusCode == 429)
+            // 3 próby
+            for (int i = 0; i < 3; i++)
             {
-                throw new Exception("Limit zapytań do API został przekroczony (429). Spróbuj ponownie później.");
+                using var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                var response = await client.PostAsync(Endpoint, content);
+
+                if ((int)response.StatusCode == 429)
+                {
+                    if (i < 2)
+                    {
+                        await Task.Delay(3000); // poczekaj 3 sekundy przed kolejną próbą
+                        continue;
+                    }
+                    throw new Exception("Limit zapytań do API został przekroczony (429). Spróbuj ponownie później.");
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                var responseBody = await response.Content.ReadAsStringAsync();
+                var result = JsonDocument.Parse(responseBody);
+
+                // W Cohere odpowiedź jest w polu 'text'
+                var answer = result.RootElement
+                                    .GetProperty("text")
+                                    .GetString();
+
+                MessageBox.Show($"Pełna odpowiedź tekstowa od Cohere:\n{answer}", "Odpowiedź API", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                // 🔵 Teraz przyjmujemy, że odpowiedź jest w 2 liniach: 1) angielska, 2) polska
+                var lines = answer.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+                var en = lines.Length > 0 ? lines[0].Trim(' ', '"', '.', '\n') : "Brak przykładu";
+                if (!string.IsNullOrWhiteSpace(wordEn) && en.IndexOf(wordEn, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    en = Regex.Replace(en, Regex.Escape(wordEn), "...", RegexOptions.IgnoreCase);
+                }
+                var pl = lines.Length > 1 ? lines[1].Trim(' ', '"', '.', '\n') : "Brak tłumaczenia";
+                MessageBox.Show($"English: {en}\nPolish: {pl}",
+                    "Test Cohere API", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                return (en, pl);
             }
 
-            response.EnsureSuccessStatusCode();
-
-
-            var responseBody = await response.Content.ReadAsStringAsync();
-            var result = JsonDocument.Parse(responseBody);
-
-            var answer = result.RootElement
-                                .GetProperty("choices")[0]
-                                .GetProperty("message")
-                                .GetProperty("content")
-                                .GetString();
-
-            // Zakładamy, że API zwraca coś w stylu: "English: ...\nPolish: ..."
-            var lines = answer.Split('\n');
-            var en = lines.FirstOrDefault(l => l.StartsWith("English:", StringComparison.OrdinalIgnoreCase))?.Substring(8).Trim();
-            var pl = lines.FirstOrDefault(l => l.StartsWith("Polish:", StringComparison.OrdinalIgnoreCase))?.Substring(7).Trim();
-
-            return (en ?? "Brak przykładu", pl ?? "Brak tłumaczenia");
+            throw new Exception("Nie udało się po 3 próbach.");
         }
     }
 }
-
-
-
-
-//using System;
-//using System.Linq;
-//using System.Net.Http;
-//using System.Threading.Tasks;
-
-//namespace Regularnik.Services;
-
-//public static class ChatGptService
-//{
-//    private const string ApiKey = "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";
-//    private const string Endpoint = "https://api.openai.com/v1/chat/completions";
-
-//    public static async Task<(string English, string Polish)> GenerateExampleAsync(string wordEn)
-//    {
-//        using var client = new HttpClient();
-//        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", ApiKey);
-
-//        var prompt = $"Napisz przykładowe zdanie po angielsku używające słowa '{wordEn}', oraz jego tłumaczenie na polski.";
-
-//        var requestBody = new
-//        {
-//            model = "gpt-3.5-turbo",
-//            messages = new[]
-//            {
-//                new { role = "system", content = "Jesteś tłumaczem angielsko-polskim." },
-//                new { role = "user", content = prompt }
-//            }
-//        };
-
-//        var json = System.Text.Json.JsonSerializer.Serialize(requestBody);
-//        var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-
-//        var response = await client.PostAsync(Endpoint, content);
-//        response.EnsureSuccessStatusCode();
-
-//        var responseBody = await response.Content.ReadAsStringAsync();
-//        var result = System.Text.Json.JsonDocument.Parse(responseBody);
-
-//        var answer = result.RootElement
-//                            .GetProperty("choices")[0]
-//                            .GetProperty("message")
-//                            .GetProperty("content")
-//                            .GetString();
-
-//        // Zakładamy, że API zwraca coś w stylu: "English: ...\nPolish: ..."
-//        var lines = answer.Split('\n');
-//        var en = lines.FirstOrDefault(l => l.StartsWith("English:", StringComparison.OrdinalIgnoreCase))?.Substring(8).Trim();
-//        var pl = lines.FirstOrDefault(l => l.StartsWith("Polish:", StringComparison.OrdinalIgnoreCase))?.Substring(7).Trim();
-
-//        return (en ?? "Brak przykładu", pl ?? "Brak tłumaczenia");
-//    }
-//}
