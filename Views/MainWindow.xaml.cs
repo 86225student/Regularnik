@@ -21,7 +21,24 @@ namespace Regularnik
             public MainWindow()
             {
                 InitializeComponent();
-            }
+                _ = TestApiAsync();
         }
+            private async Task TestApiAsync()
+            {
+                try
+                {
+                    // Pobierz wynik z ChatGPT
+                    var wynik = await Regularnik.Services.ChatGptServiceTest.TestApiKeyAsync();
+
+                    // Pokaż w oknie dialogowym
+                    MessageBox.Show(wynik, "Test ChatGPT", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Błąd: {ex.Message}", "Test ChatGPT", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+
+    }
 }
 

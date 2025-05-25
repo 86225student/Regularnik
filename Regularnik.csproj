@@ -65,6 +65,9 @@
     <PackageReference Include="System.Data.SQLite.Core">
       <Version>1.0.119</Version>
     </PackageReference>
+    <PackageReference Include="System.Text.Json">
+      <Version>9.0.5</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -80,6 +83,8 @@
     <Compile Include="Models\FileName.cs" />
     <Compile Include="Models\StatsEntry.cs" />
     <Compile Include="Models\Word.cs" />
+    <Compile Include="Services\ChatGptService.cs" />
+    <Compile Include="Services\ChatGptServiceTest.cs" />
     <Compile Include="Services\DatabaseService.cs" />
     <Compile Include="ViewModels\AddCourseViewModel.cs" />
     <Compile Include="ViewModels\CatalogViewModel.cs" />

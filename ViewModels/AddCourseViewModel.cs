@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Regularnik.Models;
@@ -56,6 +57,13 @@ namespace Regularnik.ViewModels
             set { _exEn = value; OnPropertyChanged(); }
         }
 
+        private bool _generateExample;
+        public bool GenerateExample
+        {
+            get => _generateExample;
+            set { _generateExample = value; OnPropertyChanged(); }
+        }
+
         public ObservableCollection<Word> TempWords { get; } = new ObservableCollection<Word>();
 
         public ICommand AddWordCommand { get; }
@@ -71,7 +79,7 @@ namespace Regularnik.ViewModels
             _onSaved = onSaved;
             _isEditMode = false;
 
-            AddWordCommand = new RelayCommand(_ => AddOrUpdateWord());
+            AddWordCommand = new RelayCommand(async _ => await AddOrUpdateWordAsync());
             SaveCourseCommand = new RelayCommand(_ => SaveCourse());
             BackCommand = new RelayCommand(_ => { if (_isEditMode) SaveCourse(); else CancelNew(); _onSaved(); });
             DeleteWordCommand = new RelayCommand(p => { if (p is Word w) TempWords.Remove(w); });
@@ -89,18 +97,35 @@ namespace Regularnik.ViewModels
                 TempWords.Add(w);
         }
 
-        private void AddOrUpdateWord()
+        private async Task AddOrUpdateWordAsync()
         {
+            if (GenerateExample && !string.IsNullOrWhiteSpace(WordEn))
+            {
+                try
+                {
+                    var example = await ChatGptService.GenerateExampleAsync(WordEn);
+                    ExEn = example.English;
+                    ExPl = example.Polish;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Błąd generowania przykładowego zdania: " + ex.Message, "Błąd",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+
             if (string.IsNullOrWhiteSpace(CourseName))
             {
                 MessageBox.Show("Musisz podać nazwę kursu.", "Uwaga", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+
             if (string.IsNullOrWhiteSpace(WordPl) || string.IsNullOrWhiteSpace(WordEn))
             {
                 MessageBox.Show("Podaj słowo po polsku i angielsku.", "Uwaga", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+
 
             if (_selectedWord != null)
             {
