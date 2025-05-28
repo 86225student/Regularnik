@@ -1,4 +1,5 @@
-﻿using System;
+﻿// File: ViewModels/AddCourseViewModel.cs
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -18,6 +19,7 @@ namespace Regularnik.ViewModels
         private readonly Action _onSaved;
         private readonly bool _isEditMode;
         private readonly int _editingCourseId;
+        private readonly string _originalName;    // <-- oryginalna nazwa przy edycji
         private Word _selectedWord;
 
         // Kurs
@@ -92,6 +94,7 @@ namespace Regularnik.ViewModels
         {
             _isEditMode = true;
             _editingCourseId = toEdit.Id;
+            _originalName = toEdit.Name;         // przechowujemy oryginał
             CourseName = toEdit.Name;
             foreach (var w in existing)
                 TempWords.Add(w);
@@ -125,7 +128,6 @@ namespace Regularnik.ViewModels
                 MessageBox.Show("Podaj słowo po polsku i angielsku.", "Uwaga", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-
 
             if (_selectedWord != null)
             {
@@ -174,16 +176,40 @@ namespace Regularnik.ViewModels
 
         private void SaveCourse()
         {
-            if (string.IsNullOrWhiteSpace(CourseName) || TempWords.Count == 0)
+            var newName = CourseName?.Trim();
+            // 1) nazwa pusta?
+            if (string.IsNullOrWhiteSpace(newName))
             {
-                MessageBox.Show("Uzupełnij nazwę i dodaj przynajmniej jedno słowo.", "Uwaga",
-                                MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Uzupełnij nazwę kursu.", "Uwaga", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            // 2) dodawanie: czy już istnieje?
+            if (!_isEditMode && _db.CourseNameExists(newName))
+            {
+                MessageBox.Show("Kurs o takiej nazwie już istnieje. Wybierz inną nazwę.",
+                                "Uwaga", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            // 3) edycja + zmiana na nazwę istniejącą?
+            if (_isEditMode
+                && !string.Equals(newName, _originalName, StringComparison.OrdinalIgnoreCase)
+                && _db.CourseNameExists(newName))
+            {
+                MessageBox.Show("Kurs o takiej nazwie już istnieje. Wybierz inną nazwę.",
+                                "Uwaga", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            // 4) czy są słowa?
+            if (TempWords.Count == 0)
+            {
+                MessageBox.Show("Dodaj przynajmniej jedno słowo.", "Uwaga", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
+            // --- zapis do bazy ---
             if (_isEditMode)
             {
-                _db.UpdateCourseName(_editingCourseId, CourseName.Trim());
+                _db.UpdateCourseName(_editingCourseId, newName);
                 foreach (var w in TempWords)
                 {
                     if (w.Id == 0)
@@ -201,7 +227,7 @@ namespace Regularnik.ViewModels
             }
             else
             {
-                int newId = _db.AddCourse(CourseName.Trim());
+                int newId = _db.AddCourse(newName);
                 foreach (var w in TempWords)
                 {
                     w.CourseId = newId;

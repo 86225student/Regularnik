@@ -14,24 +14,24 @@
             <TextBlock Text="{Binding Path=_isEditMode, Converter={StaticResource BoolToEditHeaderConverter}}"
                        Foreground="#FFD93D" FontSize="30" FontWeight="Bold" Margin="0,0,0,20"/>
 
-            <TextBlock Text="Nazwa kursu" Foreground="#FFD93D" FontWeight="SemiBold" Margin="0,0,0,5"/>
+            <TextBlock Text="Nazwa kursu *" Foreground="#FFD93D" FontWeight="SemiBold" Margin="0,0,0,5"/>
             <TextBox Text="{Binding CourseName, UpdateSourceTrigger=PropertyChanged}"
                      Height="30" Padding="5" Margin="0,0,0,15"/>
 
-            <TextBlock Text="Słowo po polsku" Foreground="#FFD93D" FontWeight="SemiBold" Margin="0,0,0,5"/>
+            <TextBlock Text="Słowo po polsku *" Foreground="#FFD93D" FontWeight="SemiBold" Margin="0,0,0,5"/>
             <TextBox Text="{Binding WordPl, UpdateSourceTrigger=PropertyChanged}"
                      Height="30" Padding="5" Margin="0,0,0,15"/>
 
-            <TextBlock Text="Słowo po angielsku" Foreground="#FFD93D" FontWeight="SemiBold" Margin="0,0,0,5"/>
+            <TextBlock Text="Słowo po angielsku *" Foreground="#FFD93D" FontWeight="SemiBold" Margin="0,0,0,5"/>
             <TextBox Text="{Binding WordEn, UpdateSourceTrigger=PropertyChanged}"
                      Height="30" Padding="5" Margin="0,0,0,15"/>
 
-            <TextBlock Text="Przykład PL" Foreground="#FFD93D" FontWeight="SemiBold" Margin="0,0,0,5"/>
+            <TextBlock Text="Przykład po polsku" Foreground="#FFD93D" FontWeight="SemiBold" Margin="0,0,0,5"/>
             <TextBox Text="{Binding ExPl, UpdateSourceTrigger=PropertyChanged}"
                      Height="30" Padding="5" Margin="0,0,0,15"
                      Visibility="{Binding GenerateExample, Converter={StaticResource InvBoolToVis}}"/>
 
-            <TextBlock Text="Przykład EN" Foreground="#FFD93D" FontWeight="SemiBold" Margin="0,0,0,15"/>
+            <TextBlock Text="Przykład po angielsku" Foreground="#FFD93D" FontWeight="SemiBold" Margin="0,0,0,15"/>
             <TextBox Text="{Binding ExEn, UpdateSourceTrigger=PropertyChanged}"
                      Height="30" Padding="5" Margin="0,0,0,25"
                      Visibility="{Binding GenerateExample, Converter={StaticResource InvBoolToVis}}"/>
