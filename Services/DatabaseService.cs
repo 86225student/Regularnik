@@ -181,6 +181,36 @@ namespace Regularnik.Services
             cmdDelCourse.ExecuteNonQuery();
         }
 
+        public IEnumerable<Word> GetWordsSortedAlphabetically(int courseId)
+        {
+            var cmd = new SQLiteCommand(
+                @"SELECT 
+             id, word_pl, word_en, example_pl, example_en,
+             correct_count, category, next_review_date
+          FROM words
+          WHERE course_id = @cid
+          ORDER BY word_pl COLLATE NOCASE",   // sortowanie alfabetyczne
+                _connection);
+            cmd.Parameters.AddWithValue("@cid", courseId);
+
+            using (var reader = cmd.ExecuteReader())
+                while (reader.Read())
+                    yield return new Word
+                    {
+                        Id = Convert.ToInt32(reader["id"]),
+                        CourseId = courseId,
+                        WordPl = reader["word_pl"].ToString(),
+                        WordEn = reader["word_en"].ToString(),
+                        ExamplePl = reader["example_pl"] as string,
+                        ExampleEn = reader["example_en"] as string,
+                        CorrectCount = Convert.ToInt32(reader["correct_count"]),
+                        Category = reader["category"].ToString(),
+                        NextReviewDate = reader["next_review_date"] == DBNull.Value
+                                         ? (DateTime?)null
+                                         : DateTime.Parse(reader["next_review_date"].ToString())
+                    };
+        }
+
         public IEnumerable<StatsEntry> GetStats(int courseId, DateTime start, DateTime end)
         {
             var list = new List<StatsEntry>();
