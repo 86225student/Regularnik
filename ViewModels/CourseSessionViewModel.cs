@@ -1,15 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using System.Globalization;
 using System.Linq;
+using System.Windows.Data;
 using System.Windows.Input;
 using Regularnik.Models;
 using Regularnik.Services;
 
 namespace Regularnik.ViewModels
 {
-    public enum Category { New, Reinforce, Review }
+    public enum Category { None = -1, New, Reinforce, Review }
     public enum CardStage { Menu, Front, Back, Done }
+
+    public class EnumEqualsConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value == null || parameter == null) return false;
+            var enumVal = Enum.Parse(value.GetType(), parameter.ToString());
+            return enumVal.Equals(value);
+        }
+
+        // Nie planujemy dwustronnego bindowania, więc zwrot DoNothing
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            => Binding.DoNothing;
+    }
 
     public class CourseSessionViewModel : ObservableObject
     {
@@ -21,7 +37,7 @@ namespace Regularnik.ViewModels
         private readonly Queue<Word> _queue = new();
         private Word _current;
 
-        private Category _activeCat;
+        private Category _activeCat = Category.None;
         private CardStage _stage = CardStage.Menu;
         private bool _showPl;
 
@@ -33,6 +49,7 @@ namespace Regularnik.ViewModels
             get => _activeCat;
             private set { _activeCat = value; OnPropertyChanged(); }
         }
+
 
         public CardStage Stage
         {

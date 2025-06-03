@@ -3,8 +3,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:Regularnik.ViewModels"
         xmlns:conv="clr-namespace:Regularnik.Converters"
-        Title="Regularnik :)" Height="600" Width="900"
-        Background="#1E2A38">
+        Title="Regularnik :)" 
+        Background="#1E2A38"
+        Width="900" Height="700"
+        MinWidth="900" MinHeight="700"
+        MaxWidth="1200" MaxHeight="800"
+        WindowStartupLocation="CenterScreen">
+
 
     <!-- ========== RESOURCES ========== -->
     <Window.Resources>

@@ -3,32 +3,93 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:conv="clr-namespace:Regularnik.Converters">
 
-    <!--RESOURCES-->
+    <!-- ============ ZASOBY ============ -->
     <UserControl.Resources>
-        <conv:EnumToVisibilityConverter x:Key="EnumToVisibility"/>
 
-        <!-- kompaktowy kafelek – 160 px szer. -->
-        <Style x:Key="Tile160" TargetType="Button" BasedOn="{StaticResource TileButtonStyle}">
-            <Setter Property="Width" Value="160"/>
+       
+        <conv:EnumToVisibilityConverter x:Key="EnumToVisibility"/>
+        <conv:EnumEqualsConverter      x:Key="EnumEquals"/>
+
+        <Style x:Key="Tile160"
+               TargetType="Button"
+            BasedOn="{StaticResource TileButtonStyle}">
+            <Setter Property="Width"  Value="160"/>
             <Setter Property="Margin" Value="0,0,20,0"/>
+
+
+            <!-- prosty szablon kafelka -->
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                Padding="12"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              RecognizesAccessKey="True"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
-        <!-- szeroki kafelek – 220 px (domyślny TileButtonStyle) -->
-        <Style x:Key="Tile220" TargetType="Button" BasedOn="{StaticResource TileButtonStyle}">
+
+        <Style x:Key="Tile160Toggle" TargetType="ToggleButton">
+            <Setter Property="Width"  Value="160"/>
+            <Setter Property="Margin" Value="0,0,20,0"/>
+            <Setter Property="Background" Value="#4E8AB9"/>
+            <Setter Property="Foreground" Value="#1E2A38"/>
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                Padding="12"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              RecognizesAccessKey="True"/>
+                        </Border>
+
+                        <!-- STANY -->
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#FFD93D"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#777777"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#FFD93D"/>
+                                <Setter Property="Foreground" Value="Black"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="Tile220" TargetType="Button" BasedOn="{StaticResource Tile160}">
             <Setter Property="Width" Value="220"/>
         </Style>
+
     </UserControl.Resources>
 
-    <!--LAYOUT-->
+    <!-- ============ UKŁAD ============ -->
     <Grid>
-        <!-- trzy pasy: nagłówek | liczniki | treść -->
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <!-- nagłówek -->
             <RowDefinition Height="Auto"/>
+            <!-- kafelki startu -->
             <RowDefinition Height="*"/>
+            <!-- treść -->
         </Grid.RowDefinitions>
 
-        <!-- ===== NAGŁÓWEK ===== -->
+        <!-- ***** NAGŁÓWEK ***** -->
         <TextBlock Grid.Row="0"
                    Text="{Binding Header}"
                    Foreground="#FFD93D"
@@ -37,42 +98,52 @@
                    HorizontalAlignment="Center"
                    Margin="0,32"/>
 
-        <!-- ===== GÓRNE LICZNIKI / START LEKCJI ===== -->
+        <!-- ***** KAFELKI STARTU LEKCJI ***** -->
         <StackPanel Grid.Row="1"
-            Orientation="Horizontal"
-            HorizontalAlignment="Center"
-            Margin="0,0,0,40">
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Center"
+                    Margin="0,0,0,40">
 
             <!-- POWTÓRKI -->
-            <Button Content="{Binding ReviewLabel}"
-            Style="{StaticResource Tile160}"
-            Command="{Binding StartReviewCommand}" />
+            <ToggleButton Content="{Binding ReviewLabel}"
+                          Style="{StaticResource Tile160Toggle}"
+                          FontWeight="Bold"
+                          Command="{Binding StartReviewCommand}"
+                          IsChecked="{Binding ActiveCat,
+                                              Mode=OneWay,
+                                              Converter={StaticResource EnumEquals},
+                                              ConverterParameter=Review}"/>
 
             <!-- UTRWAL -->
-            <Button Content="{Binding ReinforceLabel}"
-            Style="{StaticResource Tile160}"
-            Command="{Binding StartReinforceCommand}" />
+            <ToggleButton Content="{Binding ReinforceLabel}"
+                          Style="{StaticResource Tile160Toggle}"
+                          FontWeight="Bold"
+                          Command="{Binding StartReinforceCommand}"
+                          IsChecked="{Binding ActiveCat,
+                                                Mode=OneWay,
+                                              Converter={StaticResource EnumEquals},
+                                              ConverterParameter=Reinforce}"/>
 
             <!-- NOWE -->
-            <Button Content="{Binding NewLabel}"
-            Style="{StaticResource Tile160}"
-            Command="{Binding StartNewCommand}"
-            Margin="0" />
+            <ToggleButton Content="{Binding NewLabel}"
+                          Style="{StaticResource Tile160Toggle}"
+                          FontWeight="Bold"
+                          Command="{Binding StartNewCommand}"
+                          IsChecked="{Binding ActiveCat,
+                                                Mode=OneWay,
+                                              Converter={StaticResource EnumEquals},
+                                              ConverterParameter=New}"
+                          Margin="0"/>
         </StackPanel>
 
-
-
-        <!-- ===== STREFA TREŚCI ===== -->
+        <!-- ***** STREFA TREŚCI ***** -->
         <Grid Grid.Row="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
-                <!-- karta / menu / done -->
                 <RowDefinition Height="Auto"/>
-                <!-- WIEM / … -->
             </Grid.RowDefinitions>
 
-
-            <!-- ~~~~ FRONT ~~~~ -->
+            <!-- FRONT -->
             <StackPanel Grid.Row="0"
                         VerticalAlignment="Center"
                         HorizontalAlignment="Center"
@@ -95,11 +166,12 @@
 
                 <Button Content="Sprawdź"
                         Style="{StaticResource RoundButtonStyle}"
+                        FontWeight="Bold"
                         Command="{Binding ShowBackCommand}"
                         Margin="0,30,0,0"/>
             </StackPanel>
 
-            <!-- ~~~~ BACK ~~~~ -->
+            <!-- BACK -->
             <StackPanel Grid.Row="0"
                         VerticalAlignment="Center"
                         HorizontalAlignment="Center"
@@ -114,7 +186,8 @@
 
                 <TextBlock Text="{Binding WordEn}"
                            FontSize="20"
-                           Foreground="#CCCCCC"
+                           FontWeight="Bold"
+                           Foreground="#FFD93D"
                            HorizontalAlignment="Center"
                            Margin="0,6"/>
 
@@ -129,6 +202,7 @@
                            Width="460"
                            TextWrapping="Wrap"
                            FontSize="18"
+                           FontStyle="Italic"
                            Foreground="#CCCCCC"
                            TextAlignment="Center"
                            Margin="0,4"
@@ -137,12 +211,13 @@
 
                 <Button Content="TŁUMACZ"
                         Style="{StaticResource Tile160}"
+                        FontWeight="Bold"
                         Width="130"
                         Command="{Binding ToggleTranslateCmd}"
                         Margin="0,20,0,0"/>
             </StackPanel>
 
-            <!-- ~~~~ DONE ~~~~ -->
+            <!-- DONE -->
             <TextBlock Grid.Row="0"
                        Text="🎉  To już wszystko na dziś!"
                        FontSize="24"
@@ -154,25 +229,27 @@
                                     Converter={StaticResource EnumToVisibility},
                                     ConverterParameter=Done}"/>
 
-        <!-- ==== WIEM / PRAWIE / NIE WIEM ==== -->
+            <!-- ***** WIEM / PRAWIE / NIE WIEM ***** -->
             <StackPanel Grid.Row="1"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Bottom"
-                    Margin="0,0,0,120"  
-                    Visibility="{Binding Stage,
-                                 Converter={StaticResource EnumToVisibility},
-                                 ConverterParameter=Back}">
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Bottom"
+                        Margin="0,0,0,120"
+                        Visibility="{Binding Stage,
+                                     Converter={StaticResource EnumToVisibility},
+                                     ConverterParameter=Back}">
 
                 <Button Content="WIEM"
-                    Style="{StaticResource Tile160}"
-                    Command="{Binding KnowCmd}"
-                    Margin="0,0,10,0"/>
+                        Style="{StaticResource Tile160}"
+                        FontWeight="Bold"
+                        Command="{Binding KnowCmd}"
+                        Margin="0,0,10,0"/>
 
                 <Button Content="PRAWIE"
-                    Style="{StaticResource Tile160}"
-                    Command="{Binding AlmostCmd}"
-                    Margin="0,0,10,0">
+                        Style="{StaticResource Tile160}"
+                        FontWeight="Bold"
+                        Command="{Binding AlmostCmd}"
+                        Margin="0,0,10,0">
                     <Button.Visibility>
                         <MultiBinding Converter="{StaticResource HideAlmostVis}">
                             <Binding Path="ActiveCat"/>
@@ -182,10 +259,12 @@
                 </Button>
 
                 <Button Content="NIE WIEM"
-                    Style="{StaticResource Tile160}"
-                    Command="{Binding DontKnowCmd}"
-                    Margin="0"/>
+                        Style="{StaticResource Tile160}"
+                        FontWeight="Bold"
+                        Command="{Binding DontKnowCmd}"
+                        Margin="0"/>
             </StackPanel>
+
         </Grid>
     </Grid>
 </UserControl>

@@ -78,6 +78,7 @@
     <Compile Include="Converters\AnswerToCommandConverter.cs" />
     <Compile Include="Converters\BoolToEditHeaderConverter.cs" />
     <Compile Include="Converters\BoolToVisibilityConverter.cs" />
+    <Compile Include="Converters\EnumEqualsConverter.cs" />
     <Compile Include="Converters\EnumToVisibilityConverter.cs" />
     <Compile Include="Converters\HideAlmostConverter.cs" />
     <Compile Include="Converters\InvBoolToVisibilityConverter.cs" />
