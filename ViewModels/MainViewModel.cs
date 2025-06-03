@@ -103,6 +103,13 @@ namespace Regularnik.ViewModels
                     };
                     break;
 
+                case "Tutorial":
+                    CurrentView = new TutorialView
+                    {
+                       
+                    };
+                    break;
+
                 case "Exit":
                     Application.Current.Shutdown();
                     return;

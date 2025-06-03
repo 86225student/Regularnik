@@ -133,10 +133,18 @@
                     CommandParameter="Catalog"/>
 
             <Button Style="{StaticResource TileButtonStyle}"
+                    Content="Samouczek"
+                    FontWeight="Bold"
+                    Command="{Binding NavigateCommand}"
+                    CommandParameter="Tutorial"/>
+
+            <Button Style="{StaticResource TileButtonStyle}"
                     Content="Wyjście"
                     FontWeight="Bold"
                     Command="{Binding NavigateCommand}"
                     CommandParameter="Exit"/>
+
+
         </StackPanel>
 
         <!-- OBSZAR ROBOCZY -->

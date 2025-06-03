@@ -100,6 +100,7 @@
     <Compile Include="ViewModels\ObservableObject.cs" />
     <Compile Include="ViewModels\RelayCommand.cs" />
     <Compile Include="ViewModels\StatisticsViewModel.cs" />
+    <Compile Include="ViewModels\TutorialViewModel.cs" />
     <Compile Include="Views\AddCourseView.xaml.cs">
       <DependentUpon>AddCourseView.xaml</DependentUpon>
     </Compile>
@@ -124,6 +125,9 @@
     </Compile>
     <Compile Include="Views\StatisticsView.xaml.cs">
       <DependentUpon>StatisticsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\TutorialView.xaml.cs">
+      <DependentUpon>TutorialView.xaml</DependentUpon>
     </Compile>
     <Page Include="Views\AddCourseView.xaml">
       <SubType>Designer</SubType>
@@ -150,6 +154,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\StatisticsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\TutorialView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
