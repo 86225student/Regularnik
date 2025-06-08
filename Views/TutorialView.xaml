@@ -6,12 +6,161 @@
              xmlns:local="clr-namespace:Regularnik.Views"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="TxtAccent" Color="#FFD93D"/>
+        <SolidColorBrush x:Key="TxtNormal" Color="White"/>
+    </UserControl.Resources>
+
     <Grid>
-        <TextBlock Text="Jak korzystać z aplikacji?"
-                           Foreground="#FFD93D"
-                           FontSize="26"
-                           FontWeight="Bold"
-                           Margin="0,0,0,25"
-                           TextAlignment="Center"/>
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  Padding="40,40,40,110">
+            
+            <StackPanel MaxWidth="680">
+
+                <!-- NAGŁÓWEK -->
+                <TextBlock FontSize="28"
+                       FontWeight="Bold"
+                       Foreground="{StaticResource TxtAccent}"
+                       TextAlignment="Center">
+                Witaj w Regularniku!
+                </TextBlock>
+
+                <!-- WSTĘP -->
+                <TextBlock Margin="0,24,0,0"
+                       FontSize="18"
+                       Foreground="{StaticResource TxtNormal}"
+                       TextWrapping="Wrap">
+                <Run FontStyle="Italic" Foreground="{StaticResource TxtAccent}">
+                    Chcesz efektywnie uczyć się języka angielskiego?
+                    Nasze algorytmy Ci w tym pomogą!
+                </Run>
+                <LineBreak/><LineBreak/>
+                Zobacz, jak w kilku krokach rozpocząć naukę i wykorzystać
+                pełen potencjał aplikacji.
+                </TextBlock>
+
+                <!-- 1. WYBÓR KURSU -->
+                <TextBlock Margin="0,32,0,4"
+                       FontSize="20"
+                       FontWeight="Bold"
+                       Foreground="{StaticResource TxtAccent}">
+                1. Wybierz odpowiedni kurs
+                </TextBlock>
+
+                <TextBlock FontSize="18"
+                       Foreground="{StaticResource TxtNormal}"
+                       TextWrapping="Wrap">
+                W aplikacji znajdziesz cztery poziomy:
+                <Run FontWeight="Bold" Foreground="{StaticResource TxtAccent}">
+                    A1, A2, B1 i B2
+                </Run>.
+                Zacznij od tego, który najbardziej odpowiada Twoim aktualnym
+                umiejętnościom – system poprowadzi Cię dalej.
+                </TextBlock>
+
+                <!-- 2. TRZY KAFELKI -->
+                <TextBlock Margin="0,28,0,4"
+                       FontSize="20"
+                       FontWeight="Bold"
+                       Foreground="{StaticResource TxtAccent}">
+                2. Poznaj kafelki POWTÓRKI / UTRWAL / NOWE
+                </TextBlock>
+
+                <TextBlock FontSize="18"
+                       Foreground="{StaticResource TxtNormal}"
+                       TextWrapping="Wrap">
+                Po wejściu do wybranego kursu zobaczysz trzy kafelki:
+                </TextBlock>
+
+                <TextBlock FontSize="18"
+                       Foreground="{StaticResource TxtNormal}"
+                       TextWrapping="Wrap"
+                       Margin="16,4,0,0">
+                • <Run FontWeight="Bold" Foreground="{StaticResource TxtAccent}">NOWE</Run> – słówka, których jeszcze nie przerobiłeś.<LineBreak/>
+                • <Run FontWeight="Bold" Foreground="{StaticResource TxtAccent}">UTRWAL</Run> – słówka, przy których nie byłeś pewien lub których nie znałeś.<LineBreak/>
+                • <Run FontWeight="Bold" Foreground="{StaticResource TxtAccent}">POWTÓRKI</Run> – słówka, które już znasz, ale system wyświetli je ponownie w odpowiednim momencie, aby utrwalić pamięć.
+                </TextBlock>
+
+                <!-- 3. JAK PRACOWAĆ ZE SŁÓWKIEM -->
+                <TextBlock Margin="0,28,0,4"
+                       FontSize="20"
+                       FontWeight="Bold"
+                       Foreground="{StaticResource TxtAccent}">
+                3. Praca ze słówkiem – trzy scenariusze
+                </TextBlock>
+
+                <Border Background="#222"
+                    CornerRadius="8"
+                    Padding="16"
+                    Margin="0,4,0,0">
+
+                    <TextBlock FontSize="18"
+                           Foreground="#CCCCCC"
+                           TextWrapping="Wrap">
+                    <Run FontWeight="Bold" Foreground="{StaticResource TxtAccent}">a) WIEM</Run> – bez wahania podajesz poprawne tłumaczenie,
+                    klikasz <Run FontWeight="Bold">SPRAWDŹ</Run>, a następnie <Run FontWeight="Bold">WIEM</Run>.
+                    <LineBreak/><LineBreak/>
+                    <Run FontWeight="Bold" Foreground="{StaticResource TxtAccent}">b) PRAWIE</Run> – czyli „miałeś na końcu języka”.
+                    Po sprawdzeniu wybierasz <Run FontWeight="Bold">PRAWIE</Run>; słówko trafi do <Run FontWeight="Bold">UTRWAL</Run>.
+                    <LineBreak/><LineBreak/>
+                    <Run FontWeight="Bold" Foreground="{StaticResource TxtAccent}">c) NIE WIEM</Run> – widzisz słowo pierwszy raz.
+                    Po pokazaniu tłumaczenia klikasz <Run FontWeight="Bold">NIE WIEM</Run>.
+                    </TextBlock>
+                </Border>
+
+                <!-- 4. ALGORYTMY POWTÓRZENIOWE -->
+                <TextBlock Margin="0,32,0,4"
+                       FontSize="20"
+                       FontWeight="Bold"
+                       Foreground="{StaticResource TxtAccent}">
+                4. Jak działają nasze algorytmy?
+                </TextBlock>
+
+                <TextBlock FontSize="18"
+                       Foreground="{StaticResource TxtNormal}"
+                       TextWrapping="Wrap">
+                <Run FontWeight="Bold" Foreground="{StaticResource TxtAccent}">Spaced repetition</Run> to metoda rozłożonych powtórek:
+                <LineBreak/>
+                • słowa oznaczone jako <Run FontWeight="Bold" Foreground="{StaticResource TxtAccent}">WIEM</Run> wrócą po kilku dniach w sekcji <Run FontWeight="Bold" Foreground="{StaticResource TxtAccent}">POWTÓRKI;</Run><LineBreak/>
+                • słowa z <Run FontWeight="Bold" Foreground="{StaticResource TxtAccent}">UTRWAL</Run> będą wyświetlane, dopóki nie oznaczysz ich jako <Run FontWeight="Bold" Foreground="{StaticResource TxtAccent}">WIEM</Run>;<LineBreak/>
+                • słowo znika z kursu dopiero, gdy upewnisz się co do jego znajomości.
+                </TextBlock>
+
+                <!-- 5. FAQ -->
+                <TextBlock Margin="0,32,0,4"
+                       FontSize="20"
+                       FontWeight="Bold"
+                       Foreground="{StaticResource TxtAccent}">
+                FAQ – najczęstsze pytania
+                </TextBlock>
+
+                <TextBlock FontSize="18"
+                       Foreground="{StaticResource TxtNormal}"
+                       TextWrapping="Wrap">
+                <Run FontWeight="Bold" Foreground="{StaticResource TxtAccent}">• Czy muszę przerobić wszystkie NOWE na raz?</Run>
+                <LineBreak/>
+                Nie – pracuj tyle, ile masz czasu. System sam przypomni o słówkach w odpowiedniej chwili.
+                <LineBreak/><LineBreak/>
+                <Run FontWeight="Bold" Foreground="{StaticResource TxtAccent}">• Kiedy kurs jest ukończony?</Run>
+                <LineBreak/>
+                Gdy w kafelkach <Run FontWeight="Bold" Foreground="{StaticResource TxtAccent}">NOWE</Run> i <Run FontWeight="Bold" Foreground="{StaticResource TxtAccent}">UTRWAL</Run> nie zostanie nic do przerobienia.
+                </TextBlock>
+
+                <!-- ZAKOŃCZENIE -->
+                <TextBlock Margin="0,36,0,0"
+                       FontSize="18"
+                       FontWeight="Bold"
+                       Foreground="{StaticResource TxtAccent}"
+                       TextWrapping="Wrap"
+                       TextAlignment="Center">
+                Powodzenia!
+                <LineBreak/>
+                <Run Foreground="{StaticResource TxtNormal}">Praktyka czyni mistrza, a Regularnik zadba o systematyczność.</Run>
+               
+                </TextBlock>
+
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
+
 </UserControl>

@@ -2,8 +2,11 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel HorizontalAlignment="Center" Margin="0,40">
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+              Padding="40,40,40,110">
+            
+            <StackPanel HorizontalAlignment="Center" Margin="0,40">
 
 
             <TextBlock Text="Wybierz kurs"
@@ -30,4 +33,5 @@
 
         </StackPanel>
     </ScrollViewer>
+        </Grid>
 </UserControl>

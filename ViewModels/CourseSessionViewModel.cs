@@ -10,6 +10,8 @@ using Regularnik.Services;
 
 namespace Regularnik.ViewModels
 {
+
+
     public enum Category { None = -1, New, Reinforce, Review }
     public enum CardStage { Menu, Front, Back, Done }
 
@@ -28,7 +30,9 @@ namespace Regularnik.ViewModels
     }
 
     public class CourseSessionViewModel : ObservableObject
+
     {
+
         /* ===== POLA I DI ===== */
         private readonly DatabaseService _db;
         private readonly Course _course;
