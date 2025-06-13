@@ -24,7 +24,34 @@ namespace Regularnik.ViewModels
 
             ShowMenuCommand = new RelayCommand(_ => IsMenuVisible = true);
             NavigateCommand = new RelayCommand(p => Navigate(p?.ToString()));
-            BackCommand = new RelayCommand(_ => GoBack());
+            BackCommand = new RelayCommand(_ =>
+            {
+                if (CurrentView is AddCourseView view && view.DataContext is AddCourseViewModel addVm && addVm.IsDirty)
+                {
+                    var result = MessageBox.Show(
+                        "Posiadasz niezatwierdzone zmiany. Czy chcesz je zapisać przed wyjściem do poprzedniego ekranu?",
+                        "Niezapisane zmiany",
+                        MessageBoxButton.YesNoCancel,
+                        MessageBoxImage.Warning);
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        addVm.SaveCourseCommand.Execute(null);
+                        GoBack();
+                    }
+                    else if (result == MessageBoxResult.No)
+                    {
+                        GoBack();
+                    }
+                    // Cancel – nic nie rób
+                }
+                else
+                {
+                    GoBack();
+                }
+            });
+
+
             LoadCoursesCommand = new RelayCommand(_ => LoadCourses());
 
             // start

@@ -22,12 +22,19 @@ namespace Regularnik.ViewModels
         private readonly string _originalName;    // <-- oryginalna nazwa przy edycji
         private Word _selectedWord;
 
+        private bool _isDirty = false;
+        public bool IsDirty
+        {
+            get => _isDirty;
+            private set { _isDirty = value; OnPropertyChanged(); }
+        }
+
         // Kurs
         private string _courseName;
         public string CourseName
         {
             get => _courseName;
-            set { _courseName = value; OnPropertyChanged(); }
+            set { _courseName = value; OnPropertyChanged();}
         }
 
         // Pola formularza
@@ -35,28 +42,28 @@ namespace Regularnik.ViewModels
         public string WordPl
         {
             get => _wordPl;
-            set { _wordPl = value; OnPropertyChanged(); }
+            set { _wordPl = value; OnPropertyChanged(); IsDirty = true; }
         }
 
         private string _wordEn;
         public string WordEn
         {
             get => _wordEn;
-            set { _wordEn = value; OnPropertyChanged(); }
+            set { _wordEn = value; OnPropertyChanged(); IsDirty = true; }
         }
 
         private string _exPl;
         public string ExPl
         {
             get => _exPl;
-            set { _exPl = value; OnPropertyChanged(); }
+            set { _exPl = value; OnPropertyChanged(); IsDirty = true; }
         }
 
         private string _exEn;
         public string ExEn
         {
             get => _exEn;
-            set { _exEn = value; OnPropertyChanged(); }
+            set { _exEn = value; OnPropertyChanged(); IsDirty = true; }
         }
 
         private bool _generateExample;
@@ -84,7 +91,14 @@ namespace Regularnik.ViewModels
             AddWordCommand = new RelayCommand(async _ => await AddOrUpdateWordAsync());
             SaveCourseCommand = new RelayCommand(_ => SaveCourse());
             BackCommand = new RelayCommand(_ => { if (_isEditMode) SaveCourse(); else CancelNew(); _onSaved(); });
-            DeleteWordCommand = new RelayCommand(p => { if (p is Word w) TempWords.Remove(w); });
+            DeleteWordCommand = new RelayCommand(p =>
+            {
+                if (p is Word w)
+                {
+                    TempWords.Remove(w);
+                    IsDirty = true;
+                }
+            });
             SelectWordCommand = new RelayCommand(p => SelectWord(p as Word));
         }
 
@@ -160,7 +174,7 @@ namespace Regularnik.ViewModels
                 };
                 TempWords.Add(w);
             }
-
+            IsDirty = true;
             ResetEntryFields();
         }
 
@@ -176,6 +190,7 @@ namespace Regularnik.ViewModels
 
         private void SaveCourse()
         {
+            IsDirty = false;
             var newName = CourseName?.Trim();
             // 1) nazwa pusta?
             if (string.IsNullOrWhiteSpace(newName))
@@ -240,6 +255,7 @@ namespace Regularnik.ViewModels
 
         private void CancelNew()
         {
+            IsDirty = false;
             TempWords.Clear();
             CourseName = WordPl = WordEn = ExPl = ExEn = string.Empty;
         }

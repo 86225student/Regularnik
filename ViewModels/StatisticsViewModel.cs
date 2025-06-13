@@ -40,6 +40,68 @@ namespace Regularnik.ViewModels
             LoadStatsCommand = new RelayCommand(_ => LoadStatistics());
         }
 
+        //private void LoadStatistics()
+        //{
+        //    IsPlotVisible = true;
+        //    if (SelectedCourse == null) return;
+
+        //    var stats = _db.GetStats(SelectedCourse.Id, StartDate, EndDate).ToList();
+
+        //    var model = new PlotModel { Title = $"Statystyki: {SelectedCourse.Name}",
+        //        Background = OxyColor.Parse("#1C2833"), // tło całego wykresu (ramka, legenda)
+        //        TextColor = OxyColors.White,            // kolor tekstów (osi, tytułów itd.)
+        //        PlotAreaBackground = OxyColor.Parse("#1C2833") // tło obszaru z wykresem (np. słupk)
+        //    };
+
+        //    var categoryAxis = new CategoryAxis
+        //    {
+        //        Position = AxisPosition.Bottom, // teraz na dole
+        //        Title = "Data",
+        //        ItemsSource = stats,
+        //        LabelField = "DateLabel",
+        //        IsZoomEnabled = false,
+        //        IsPanEnabled = false,
+        //        TitleColor = OxyColors.White,
+        //        TextColor = OxyColors.White,
+        //        TicklineColor = OxyColors.White,
+        //    };
+
+        //    var valueAxis = new LinearAxis
+        //    {
+        //        Position = AxisPosition.Left, // teraz po lewej
+        //        Title = "Liczba pytań",
+        //        IsZoomEnabled = false,
+        //        IsPanEnabled = false,
+        //        TitleColor = OxyColors.White,
+        //        TextColor = OxyColors.White,
+        //        TicklineColor = OxyColors.White,
+        //    };
+
+        //    var totalSeries = new ColumnSeries
+        //    {
+        //        Title = "Wszystkie",
+        //        FillColor = OxyColors.Gold,
+        //        ItemsSource = null, // usuwamy
+        //        Items = stats.Select(s => new ColumnItem(s.TotalQuestions)).ToList()
+        //    };
+
+
+        //    var correctSeries = new ColumnSeries
+        //    {
+        //        Title = "Poprawne",
+        //        FillColor = OxyColors.Green,
+        //        ItemsSource = null,
+        //        Items = stats.Select(s => new ColumnItem(s.CorrectAnswers)).ToList()
+        //    };
+
+        //    model.Axes.Add(categoryAxis);
+        //    model.Axes.Add(valueAxis);
+        //    model.Series.Add(totalSeries);
+        //    model.Series.Add(correctSeries);
+
+        //    PlotModel = model;
+        //    OnPropertyChanged(nameof(PlotModel));
+        //}
         private void LoadStatistics()
         {
             IsPlotVisible = true;
@@ -47,51 +109,55 @@ namespace Regularnik.ViewModels
 
             var stats = _db.GetStats(SelectedCourse.Id, StartDate, EndDate).ToList();
 
-            var model = new PlotModel { Title = $"Statystyki: {SelectedCourse.Name}",
-                Background = OxyColor.Parse("#1C2833"), // tło całego wykresu (ramka, legenda)
-                TextColor = OxyColors.White,            // kolor tekstów (osi, tytułów itd.)
-                PlotAreaBackground = OxyColor.Parse("#1C2833") // tło obszaru z wykresem (np. słupk)
+            var model = new PlotModel
+            {
+                Title = $"Statystyki: {SelectedCourse.Name}",
+                Background = OxyColors.Transparent, // wersja 1.0.0 nie ma Parse
+                TextColor = OxyColors.White,
+                PlotAreaBackground = OxyColors.Transparent
             };
 
             var categoryAxis = new CategoryAxis
             {
-                Position = AxisPosition.Left,
+                Position = AxisPosition.Bottom,
                 Title = "Data",
-                ItemsSource = stats,
-                LabelField = "DateLabel",
-                IsZoomEnabled = false,
-                IsPanEnabled = false,
                 TitleColor = OxyColors.White,
                 TextColor = OxyColors.White,
                 TicklineColor = OxyColors.White,
+                IsZoomEnabled = false,
+                IsPanEnabled = false
             };
+
+            // Dodaj etykiety ręcznie
+            foreach (var entry in stats)
+            {
+                categoryAxis.Labels.Add(entry.Date.ToString("dd.MM"));
+            }
 
             var valueAxis = new LinearAxis
             {
-                Position = AxisPosition.Bottom,
+                Position = AxisPosition.Left,
                 Title = "Liczba pytań",
-                IsZoomEnabled = false,
-                IsPanEnabled = false,
                 TitleColor = OxyColors.White,
                 TextColor = OxyColors.White,
                 TicklineColor = OxyColors.White,
+                IsZoomEnabled = false,
+                IsPanEnabled = false
             };
 
-            var totalSeries = new BarSeries
+            var totalSeries = new ColumnSeries
             {
                 Title = "Wszystkie",
-                FillColor = OxyColors.Gold,
-                ItemsSource = stats,
-                ValueField = "TotalQuestions"
+                FillColor = OxyColors.Gold
             };
+            totalSeries.Items.AddRange(stats.Select(s => new ColumnItem(s.TotalQuestions)));
 
-            var correctSeries = new BarSeries
+            var correctSeries = new ColumnSeries
             {
                 Title = "Poprawne",
-                FillColor = OxyColors.Green,
-                ItemsSource = stats,
-                ValueField = "CorrectAnswers"
+                FillColor = OxyColors.Green
             };
+            correctSeries.Items.AddRange(stats.Select(s => new ColumnItem(s.CorrectAnswers)));
 
             model.Axes.Add(categoryAxis);
             model.Axes.Add(valueAxis);
@@ -102,7 +168,9 @@ namespace Regularnik.ViewModels
             OnPropertyChanged(nameof(PlotModel));
         }
 
+
     }
+
 
     public class StatsEntry
     {
@@ -110,4 +178,6 @@ namespace Regularnik.ViewModels
         public int TotalQuestions { get; set; }
         public int CorrectAnswers { get; set; }
     }
+
+
 }

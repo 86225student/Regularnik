@@ -55,7 +55,15 @@
                     A1, A2, B1 i B2
                 </Run>.
                 Zacznij od tego, który najbardziej odpowiada Twoim aktualnym
-                umiejętnościom – system poprowadzi Cię dalej.
+                umiejętnościom – system poprowadzi Cię dalej. 
+                Możesz również dodać swoje własne kursy - wystarczy przejść do katalogu
+                kursów, a następnie dodać własny kurs. Pamiętaj, że nazwy kursów nie mogą się powtarzać,
+                a podczas dodawania słówek, pola oznaczone symbolem * są obowiązkowe do uzupełnienia.
+                Utworzone kursy, możesz też edytować dodając lub usuwając słowa, a także edytować już istniejące w razie pomyłki. Pamiętaj o zapisaniu kursu po edycji !!!
+                Kursy A1, A2, B1 i B2 są stworzone w oparciu o Common European Framework of Reference for Languages, z tego powodu edycja ich jest niemożliwa.
+                Podczas dodawania słów do kursu, zauważysz checkbox, który po zaznaczeniu umożliwi Ci dodanie przykładu zdań z wpisanym przez Ciebie słowem - 
+                ta opcja jest oparta o sztuczną inteligencję, która czasem zwraca nieprzewidziane wartości, dlatego zwróć uwagę jaki przykład jest zwracany i potraktuj go 
+                bardziej jako sugestię, którą możesz modyfikować.
                 </TextBlock>
 
                 <!-- 2. TRZY KAFELKI -->
