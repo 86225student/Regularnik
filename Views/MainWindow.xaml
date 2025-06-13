@@ -6,7 +6,8 @@
         Title="Regularnik :)" 
         Background="#1E2A38"
         Width="900" Height="700"
-        ResizeMode="NoResize"
+        MinWidth="900" MinHeight="700"
+        ResizeMode="CanResize"
         WindowStartupLocation="CenterScreen">
 
     <!-- ========== RESOURCES ========== -->

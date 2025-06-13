@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using System.Windows;
 using Regularnik.Services;
+using Regularnik.ViewModels;
 
 namespace Regularnik
 {
@@ -10,6 +11,29 @@ namespace Regularnik
         public MainWindow()
         {
             InitializeComponent();
+
+            string dbPath = "Data/app.db";
+
+            if (!StartupVerifier.IsDatabaseAvailable(dbPath, out string dbError))
+            {
+                MessageBox.Show(dbError, "Błąd bazy danych", MessageBoxButton.OK, MessageBoxImage.Error);
+                Application.Current.Shutdown();
+                return;
+            }
+
+            Task.Run(async () =>
+            {
+                bool hasInternet = await StartupVerifier.IsInternetAvailableAsync();
+                if (!hasInternet)
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        MessageBox.Show("Brak połączenia z internetem.", "Błąd połączenia", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    });
+                }
+            });
+
+            DataContext = new MainViewModel(); // lub Twój startowy VM
 
             // 🚀 TEST Cohere API przy starcie
             //TestCohereApi();
